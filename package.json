@@ -23,7 +23,7 @@
     "eslint-plugin-vue": "^5.2.2",
     "gridsome": "^0.6.0",
     "html-minifier": "^4.0.0",
-    "lighthouse": "^5.0.0",
+    "lighthouse": "^5.1.0",
     "luxon": "^1.16.0",
     "moment": "^2.24.0",
     "node-sass": "^4.11.0",
