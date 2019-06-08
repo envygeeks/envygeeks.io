@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@gridsome/remark-prismjs": "^0.0.6",
-    "@gridsome/source-filesystem": "^0.4.1",
+    "@gridsome/source-filesystem": "^0.5.0",
     "@gridsome/transformer-json": "^0.2.1",
     "@gridsome/transformer-remark": "^0.3.2",
     "@gridsome/transformer-yaml": "^0.2.0",
