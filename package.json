@@ -12,7 +12,7 @@
     "@gridsome/source-filesystem": "^0.4.1",
     "@gridsome/transformer-json": "^0.2.1",
     "@gridsome/transformer-remark": "^0.3.2",
-    "@gridsome/transformer-yaml": "^0.2.0",
+    "@gridsome/transformer-yaml": "^0.2.1",
     "chart.js": "^2.8.0",
     "eslint": "^5.16.0",
     "eslint-config-standard": "^12.0.0",
