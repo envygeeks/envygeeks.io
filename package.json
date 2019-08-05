@@ -29,6 +29,6 @@
     "node-sass": "^4.11.0",
     "sass-loader": "^7.1.0",
     "vue-chartjs": "^3.4.2",
-    "webpack": "^4.39.0"
+    "webpack": "^4.39.1"
   }
 }
