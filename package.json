@@ -21,7 +21,7 @@
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.1",
     "eslint-plugin-vue": "^5.2.3",
-    "gridsome": "^0.6.8",
+    "gridsome": "^0.6.9",
     "html-minifier": "^4.0.0",
     "lighthouse": "^5.2.0",
     "luxon": "^1.17.2",
