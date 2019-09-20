@@ -713,10 +713,10 @@
   dependencies:
     json-parse-better-errors "^1.0.2"
 
-"@gridsome/transformer-remark@^0.3.2":
-  version "0.3.2"
-  resolved "https://registry.yarnpkg.com/@gridsome/transformer-remark/-/transformer-remark-0.3.2.tgz#f4027da6c496ec5a2c2468bc595a9c311cb26c76"
-  integrity sha512-OGZvYli8MiAdvs8CAOhaNRlEurEHWbJ3b27G5CMNMr9HsesOcKeh1TQoH/tdiInyT7OZz01anJTsRCZmUU1IjA==
+"@gridsome/transformer-remark@^0.3.4":
+  version "0.3.4"
+  resolved "https://registry.yarnpkg.com/@gridsome/transformer-remark/-/transformer-remark-0.3.4.tgz#7ecf37565ffb95001ed2cf7562ff1c42ac67ecbb"
+  integrity sha512-EYDfZs1JmpIfoXYszmxmzHNcg4YxcbBSjFWPm4CHpie6CXreNOmXErO2WZ5QvLscEu/B5bsno/3mAL30roCxyw==
   dependencies:
     gray-matter "^4.0.2"
     hash-sum "^1.0.2"
