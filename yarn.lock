@@ -698,15 +698,16 @@
     unist-builder "^1.0.4"
     unist-util-visit "^1.4.0"
 
-"@gridsome/source-filesystem@^0.5.0":
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/@gridsome/source-filesystem/-/source-filesystem-0.5.0.tgz#7b88f5dcdde1014c6c7da5c5bcbca0e284101992"
-  integrity sha512-gTtUw3jesCG/zsIQT1k555Bn+3HC/xK46R3747olTYThldzun31wAW+YHBCc2l8mAsFp++JkCxgxKGdy8yaJhg==
+"@gridsome/source-filesystem@^0.6.2":
+  version "0.6.2"
+  resolved "https://registry.yarnpkg.com/@gridsome/source-filesystem/-/source-filesystem-0.6.2.tgz#95f65e9fcf03624ba23f8f0bee0779fe8e8b9021"
+  integrity sha512-K1pyXwFYIlABaHq3wqOPyYt4ARzLZuUQ+UZKjDSBT9I0T0qpCbwir5kJMQkR7qY4ONflUrv8fgG6DNSrc1uzbA==
   dependencies:
     chokidar "^2.0.4"
     fs-extra "^7.0.0"
     globby "^8.0.1"
     lodash "^4.17.10"
+    mime-types "^2.1.21"
     slash "^2.0.0"
 
 "@gridsome/transformer-json@^0.2.1":
