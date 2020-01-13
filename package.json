@@ -28,7 +28,7 @@
     "luxon": "^1.21.3",
     "moment": "^2.24.0",
     "node-sass": "^4.13.0",
-    "sass-loader": "^8.0.0",
+    "sass-loader": "^8.0.2",
     "vue-chartjs": "^3.5.0",
     "webpack": "^4.41.5"
   }
