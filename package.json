@@ -20,7 +20,7 @@
     "node-sass": "^4.14.1",
     "postcss-cli": "^7.1.1",
     "sass-loader": "^10.0.1",
-    "vue-chartjs": "^3.5.0",
+    "vue-chartjs": "^3.5.1",
     "webpack": "^4.44.1"
   },
   "devDependencies": {
