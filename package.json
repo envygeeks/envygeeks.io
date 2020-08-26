@@ -11,7 +11,7 @@
     "@gridsome/remark-prismjs": "^0.4.0",
     "@gridsome/source-filesystem": "^0.6.2",
     "@gridsome/transformer-json": "^0.2.1",
-    "@gridsome/transformer-remark": "^0.6.1",
+    "@gridsome/transformer-remark": "^0.6.2",
     "@gridsome/transformer-yaml": "^0.2.1",
     "cssnano": "^4.1.10",
     "dayjs": "^1.8.34",
