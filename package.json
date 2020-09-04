@@ -19,7 +19,7 @@
     "html-minifier": "^4.0.0",
     "node-sass": "^4.14.1",
     "postcss-cli": "^7.1.2",
-    "sass-loader": "^10.0.1",
+    "sass-loader": "^10.0.2",
     "vue-chartjs": "^3.5.1",
     "webpack": "^4.44.1"
   },
