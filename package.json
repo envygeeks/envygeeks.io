@@ -21,7 +21,7 @@
     "postcss-cli": "^7.1.2",
     "sass-loader": "^10.0.2",
     "vue-chartjs": "^3.5.1",
-    "webpack": "^4.44.1"
+    "webpack": "^4.45.0"
   },
   "devDependencies": {
     "@mapbox/stylelint-processor-arbitrary-tags": "^0.3.0",
