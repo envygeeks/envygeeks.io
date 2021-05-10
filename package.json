@@ -17,7 +17,7 @@
     "dayjs": "^1.8.35",
     "gridsome": "^0.7.20",
     "html-minifier": "^4.0.0",
-    "node-sass": "^4.14.1",
+    "node-sass": "^6.0.0",
     "postcss-cli": "^7.1.2",
     "sass-loader": "^10.0.2",
     "vue-chartjs": "^3.5.1",
