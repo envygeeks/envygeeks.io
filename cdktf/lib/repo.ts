@@ -64,7 +64,7 @@ export class RepoStack extends TerraformStack {
       requiredLinearHistory: true,
       requireConversationResolution: true,
       requireSignedCommits: false,
-      enforceAdmins: true,
+      enforceAdmins: false,
       forcePushBypassers: [
         owner.nodeId,
       ],
