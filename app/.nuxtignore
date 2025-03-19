@@ -1,0 +1,18 @@
+# --
+# Me
+# --
+scripts/
+tests/
+
+# --
+# Cdk
+# --
+cdk.json
+cdk.*.json
+cdk.out
+stacks/
+
+# --
+# Os
+# --
+.DS_Store

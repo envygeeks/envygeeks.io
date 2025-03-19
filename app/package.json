@@ -1,0 +1,43 @@
+{
+  "name": "@envygeeks.io/app",
+  "module": "true",
+  "private": true,
+  "scripts": {
+    "build": "dotenvx run -- nuxt build",
+    "lint:fix": "dotenvx run -- eslint . --fix",
+    "build:dev": "dotenvx run -- pnpm run build --envName=dev",
+    "build:prod": "dotenvx run -- pnpm run build --envName=prod",
+    "cleanup": "find . -name '.DS_Store' -type f -delete && dotenvx run -- pnpm nuxi cleanup",
+    "dev": "dotenvx run -- nuxi dev --inspect --envName=local --debug",
+    "tunnel": "cloudflared tunnel --url http://localhost:3000",
+    "postinstall": "dotenvx run -- nuxi prepare",
+    "server": "node .output/server/index.mjs",
+    "lint": "dotenvx run -- eslint ."
+  },
+  "devDependencies": {
+    "@nuxt/content": "^2.13.4",
+    "@nuxt/devtools": "^1.7.0",
+    "@nuxt/eslint": "^1.1.0",
+    "@nuxt/image": "^1.9.0",
+    "@nuxt/kit": "^3.15.3",
+    "@nuxt/test-utils": "^3.17.2",
+    "@nuxt/types": "^2.18.1",
+    "@nuxtjs/color-mode": "^3.5.2",
+    "@nuxtjs/google-fonts": "^3.2.0",
+    "@nuxtjs/html-minifier": "^0.1.2",
+    "@nuxtjs/robots": "^5.2.2",
+    "@nuxtjs/seo": "^2.1.0",
+    "@nuxtjs/tailwindcss": "^6.13.1",
+    "@tailwindcss/vite": "^4.0.0",
+    "@types/culori": "^2.1.1",
+    "@vue/test-utils": "^2.4.6",
+    "culori": "^4.0.1",
+    "daisyui": "^4.12.23",
+    "dayjs-nuxt": "^2.1.11",
+    "happy-dom": "^17.4.4",
+    "nuxt": "^3.15.3",
+    "playwright-core": "^1.51.0",
+    "ufo": "^1.5.4",
+    "vitest": "^3.0.8"
+  }
+}

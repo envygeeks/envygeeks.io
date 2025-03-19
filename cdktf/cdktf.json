@@ -1,0 +1,11 @@
+{
+  "language": "typescript",
+  "app": "pnpm ts-node cdktf.ts",
+  "projectId": "3bf9c34d-0f57-4dcf-a6bd-55668faa57f9",
+  "sendCrashReports": "false",
+  "terraformProviders": [],
+  "terraformModules": [],
+  "context": {
+
+  }
+}

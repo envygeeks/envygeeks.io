@@ -1,0 +1,30 @@
+{
+  "name": "envygeeks.io",
+  "private": true,
+  "devDependencies": {
+    "@dotenvx/dotenvx": "^1.39.0",
+    "dotenv-cli": "^8.0.0",
+    "env-var": "^7.5.0",
+    "source-map-support": "^0.5.21",
+    "ts-node": "^10.9.2",
+    "ts-prune": "^0.10.3",
+    "typescript": "~5.6.3"
+  },
+  "scripts": {
+    "preinstall": "script/sync-s3-down"
+  },
+  "pnpm": {
+    "ignoredBuiltDependencies": [
+      "esbuild",
+      "@parcel/watcher",
+      "vue-demi",
+      "sharp"
+    ],
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "@parcel/watcher",
+      "vue-demi",
+      "sharp"
+    ]
+  }
+}

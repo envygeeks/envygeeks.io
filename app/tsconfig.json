@@ -1,0 +1,9 @@
+{
+  "extends": "./.nuxt/tsconfig.json",
+  "declarationMap": true,
+  "exclude": [
+    "cdk.out",
+    "node_modules",
+    "stacks/"
+  ]
+}

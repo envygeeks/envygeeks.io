@@ -1,0 +1,51 @@
+# --
+# Editors
+# --
+/.idea
+/.fleet
+
+# --
+# OS
+# --
+.DS_Store
+
+# --
+# Cdk/Terraform
+# --
+/cdk/cdk.*.json
+/cdktf/cdktf.log
+/cdktf/.terraform
+/cdktf/*terraform.*.tfstate*
+/cdktf/tsconfig.tsbuildinfo
+/cdk/outputs.json
+/cdktf/cdktf.out
+/cdk/cdk.out
+/cdktf/.gen
+
+# --
+# Nuxt
+# --
+/app/dist
+/app/.output
+/app/content
+/app/public
+/app/.dep
+/app/.env.*
+/app/.env
+/app/.cache
+/app/.nitro
+/app/.nuxt
+/app/logs
+/app/*.log
+
+# --
+# Node
+# --
+/.pnpm-store
+node_modules
+
+# --
+# Other
+# --
+.env.keys
+.env
