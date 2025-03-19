@@ -157,10 +157,6 @@
 
     .content {
       pre[class*="language-"] {
-        background-color: color-mix(
-          in oklch, oklch(var(--n)), black 12%
-        );
-
         span {
           font-weight: var(--shiki-dark-font-weight);
           text-decoration: var(--shiki-dark-text-decoration);
@@ -175,8 +171,6 @@
 
     .content {
       pre[class*="language-"] {
-        @apply bg-opacity-40;
-
         span {
           font-weight: var(--shiki-light-font-weight);
           text-decoration: var(--shiki-light-text-decoration);
