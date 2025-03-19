@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -eo pipefail
+
+base=$(cd "$(dirname "$0")" && pwd)
+s3_bucket=$(dotenvx get S3_CONTENT_BUCKET)
+s3_base="s3://${s3_bucket}"
+
+for dir in content public; do
+  dotenvx run -q -- \
+    aws s3 sync "${s3_base}/${dir}" \
+    "${base}/../app/${dir}"
+done
