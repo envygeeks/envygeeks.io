@@ -1,5 +1,7 @@
 {
-  "app": "pnpm ts-node --prefer-ts-exts --project=tsconfig.json cdk.ts ",
+  "app": "pnpm ts-node --prefer-ts-exts --project=tsconfig.json cdk.ts",
+  "outputsFile": "outputs.json",
+  "requireApproval": "never",
   "watch": {
     "include": [
       "**"
