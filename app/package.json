@@ -3,16 +3,16 @@
   "module": "true",
   "private": true,
   "scripts": {
-    "build": "dotenvx run -- nuxt build",
-    "lint:fix": "dotenvx run -- eslint . --fix",
-    "build:dev": "dotenvx run -- pnpm run build --envName=dev",
-    "build:prod": "dotenvx run -- pnpm run build --envName=prod",
-    "cleanup": "find . -name '.DS_Store' -type f -delete && dotenvx run -- pnpm nuxi cleanup",
-    "dev": "dotenvx run -- nuxi dev --inspect --envName=local --debug",
+    "build": "dotenvx run -f .env.dev -- nuxt build",
+    "lint:fix": "dotenvx run -f .env.local -- eslint . --fix",
     "tunnel": "cloudflared tunnel --url http://localhost:3000",
-    "postinstall": "dotenvx run -- nuxi prepare",
-    "server": "node .output/server/index.mjs",
-    "lint": "dotenvx run -- eslint ."
+    "build:dev": "dotenvx run -f .env.dev -- pnpm run build --envName=dev",
+    "build:prod": "dotenvx run -f .env.prod  -- pnpm run build --envName=prod",
+    "cleanup": "find . -name '.DS_Store' -type f -delete && dotenvx run -- pnpm nuxi cleanup",
+    "dev": "dotenvx run -f .env.local -- nuxi dev --inspect --envName=local --debug",
+    "server": "dotenvx run -f .env.prod -- node .output/server/index.mjs",
+    "postinstall": "dotenvx run -f .env.local -- nuxi prepare",
+    "lint": "dotenvx run -f .env.local -- eslint ."
   },
   "devDependencies": {
     "@nuxt/content": "^2.13.4",
