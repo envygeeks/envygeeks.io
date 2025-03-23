@@ -49,6 +49,7 @@ node_modules
 # --
 .env.keys
 .env.prod
+.env.shared
 .env.local
 .env.dev
 .env
