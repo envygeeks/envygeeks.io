@@ -10,9 +10,9 @@
     "gc": "../script/with-env --dev cdk --unstable=gc gc"
   },
   "devDependencies": {
-    "aws-cdk": "~2.1003",
-    "aws-cdk-lib": "~2.173",
-    "cdk-nag": "^2.35.47",
-    "constructs": "^10.4.2"
+    "aws-cdk": "~2.1005.0",
+    "aws-cdk-lib": "~2.185.0",
+    "constructs": "^10.4.2",
+    "cdk-nag": "^2.35.53"
   }
 }
