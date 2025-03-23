@@ -11,11 +11,11 @@
     "typescript": "~5.6.3"
   },
   "scripts": {
-    "sync:up": "dotenvx run -f .env.local -- script/sync-s3-up",
-    "sync:down": "dotenvx run -f .env.local -- script/sync-s3-down",
-    "decrypt:env": "dotenvx decrypt -f .env.local -f .env.dev -f .env.prod",
-    "encrypt:env": "dotenvx encrypt -f .env.local -f .env.dev -f .env.prod",
-    "preinstall": "script/sync-s3-down"
+    "sync:up": "script/with-env --dev script/sync-s3-up",
+    "sync:down": "script/with-env --dev script/sync-s3-down",
+    "decrypt:env": "dotenvx decrypt -f .env.local -f .env.dev -f .env.prod -f .env.shared",
+    "encrypt:env": "dotenvx encrypt -f .env.local -f .env.dev -f .env.prod -f .env.shared",
+    "preinstall": "script/with-env --dev script/sync-s3-down"
   },
   "pnpm": {
     "ignoredBuiltDependencies": [

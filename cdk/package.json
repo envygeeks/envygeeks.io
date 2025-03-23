@@ -2,12 +2,12 @@
   "name": "@envygeeks.io/cdk",
   "private": true,
   "scripts": {
-    "gc": "dotenvx run -f .env.local -- cdk --unstable=gc gc",
-    "diff": "dotenvx run -f .env.local -- cdk diff --require-approval=never",
-    "deploy:prod": "dotenvex -f .env.prod -- pnpm run --filter=cdk deploy Dev/* cdk deploy",
-    "deploy:dev": "dotenvex -f .env.dev -- pnpm run --filter=cdk deploy Dev/* cdk deploy",
-    "destroy": "dotenvx run -f .env.local -- cdk destroy --require-approval=never",
-    "synth": "dotenvx run -f .env.local --  cdk synth --unstable=gc"
+    "deploy:dev": "../script/with-env --dev cdk deploy Dev/*",
+    "deploy:prod": "../script/with-env --prod cdk deploy Prod/*",
+    "destroy": "../script/with-env --dev cdk destroy --require-approval=never",
+    "diff": "../script/with-env --dev cdk diff --require-approval=never",
+    "synth": "../script/with-env --dev cdk synth --unstable=gc",
+    "gc": "../script/with-env --dev cdk --unstable=gc gc"
   },
   "devDependencies": {
     "aws-cdk": "~2.1003",

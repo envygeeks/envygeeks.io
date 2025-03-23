@@ -2,7 +2,7 @@
   "name": "@envygeeks.io/cdktf",
   "private": true,
   "scripts": {
-    "deploy:repo": "dotenvx run -f .env.dev -- cdktf deploy GithubRepo"
+    "deploy:repo": "../script/with-env --dev cdktf deploy GithubRepo"
   },
   "devDependencies": {
     "@cdktf/provider-github": "^14.6.0",
@@ -11,4 +11,3 @@
     "constructs": "^10.4.2"
   }
 }
-

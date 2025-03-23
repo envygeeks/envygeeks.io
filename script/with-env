@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -eo pipefail
+
+if [ "${1}" = "--local" ]; then
+  shift
+
+  exec dotenvx run \
+    -f .env.local -- \
+      "${@}"
+else
+  shift
+
+  [ "${1}" == "--prod" ] && f=".env.prod" || f=".env.dev"
+  exec dotenvx run \
+    --overload \
+    -f .env.shared \
+    -f "${f}" -- \
+      "${@}"
+fi

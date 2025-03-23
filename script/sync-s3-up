@@ -2,12 +2,10 @@
 set -eo pipefail
 
 base="$(cd "$(dirname "$0")" && pwd)"
-s3_bucket=$(dotenvx get S3_CONTENT_BUCKET)
-s3_base="s3://${s3_bucket}"
+s3_base="s3://${S3_CONTENT_BUCKET}"
 
 for dir in content public; do
-  dotenvx run -q -- \
-    aws s3 sync "${base}/../app/${dir}" \
-    "s3://${s3_bucket}/${dir}" \
+  aws s3 sync "${base}/../app/${dir}" \
+    "${s3_base}/${dir}" \
     --delete
 done
