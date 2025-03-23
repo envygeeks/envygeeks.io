@@ -3,16 +3,17 @@
   "module": "true",
   "private": true,
   "scripts": {
-    "build": "dotenvx run -f .env.dev -- nuxt build",
-    "lint:fix": "dotenvx run -f .env.local -- eslint . --fix",
+    "build": "../script/with-env --dev --pnpm=app nuxi build",
     "tunnel": "cloudflared tunnel --url http://localhost:3000",
-    "build:dev": "dotenvx run -f .env.dev -- pnpm run build --envName=dev",
-    "build:prod": "dotenvx run -f .env.prod  -- pnpm run build --envName=prod",
-    "cleanup": "find . -name '.DS_Store' -type f -delete && dotenvx run -- pnpm nuxi cleanup",
-    "dev": "dotenvx run -f .env.local -- nuxi dev --inspect --envName=local --debug",
-    "server": "dotenvx run -f .env.prod -- node .output/server/index.mjs",
-    "postinstall": "dotenvx run -f .env.local -- nuxi prepare",
-    "lint": "dotenvx run -f .env.local -- eslint ."
+    "lint:fix": "../script/with-env --local --pnpm=app eslint . --fix",
+    "build:dev": "../script/with-env --dev --pnpm=app build --envName=dev",
+    "build:prod": "../script/with-env --prod --pnpm=app nuxi build --envName=prod",
+    "clean:ds_store": "find . -name '.DS_Store' -type f -delete",
+    "clean:nuxt": "../script/with-env --local --pnpm=app nuxi cleanup",
+    "dev": "../script/with-env --local --pnpm=app nuxi dev --inspect --envName=local --debug",
+    "server": "../script/with-env --prod  node .output/server/index.mjs",
+    "postinstall": "../script/with-env --pnpm=app nuxi prepare",
+    "lint": "../script/with-env --local eslint ."
   },
   "devDependencies": {
     "@nuxt/content": "^2.13.4",

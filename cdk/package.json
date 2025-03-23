@@ -2,12 +2,13 @@
   "name": "@envygeeks.io/cdk",
   "private": true,
   "scripts": {
-    "deploy:dev": "../script/with-env --dev cdk deploy Dev/*",
-    "deploy:prod": "../script/with-env --prod cdk deploy Prod/*",
-    "destroy": "../script/with-env --dev cdk destroy --require-approval=never",
-    "diff": "../script/with-env --dev cdk diff --require-approval=never",
-    "synth": "../script/with-env --dev cdk synth --unstable=gc",
-    "gc": "../script/with-env --dev cdk --unstable=gc gc"
+    "deploy:dev": "../script/with-env --dev --pnpm=cdk deploy Dev/*",
+    "deploy:prod": "../script/with-env --prod --pnpm=cdk deploy Prod/*",
+    "deploy:hostedZones": "SKIP_ASSETS=true ../script/with-env --dev --pnpm=cdk deploy HostedZones",
+    "destroy": "../script/with-env --dev --pnpm=cdk destroy --require-approval=never",
+    "diff": "../script/with-env --dev --pnpm=cdk diff --require-approval=never",
+    "synth": "../script/with-env --dev --pnpm=cdk synth --unstable=gc",
+    "gc": "../script/with-env --dev --pnpm=cdk --unstable=gc gc"
   },
   "devDependencies": {
     "aws-cdk": "~2.1005.0",

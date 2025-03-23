@@ -1,19 +1,106 @@
-#!/usr/bin/env bash
-set -eo pipefail
+#!/usr/bin/env python3
 
-if [ "${1}" = "--local" ]; then
-  shift
+import sys
+import argparse
+import os
 
-  exec dotenvx run \
-    -f .env.local -- \
-      "${@}"
-else
-  shift
+# --
+# A script that allows us to shorten
+# and support both pnpm filters, and adding
+# a bunch of env vars to commands without all the
+# commands becoming a huge nightmare
+# --
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--pnpm", action="store")
+    parser.add_argument("--verbose", action="store_true")
+    parser.add_argument("--prod", action="store_true")
+    parser.add_argument("--local", action="store_true")
+    parser.add_argument("--dev", action="store_true")
+    args, remaining_args = (
+        parser.parse_known_args())
 
-  [ "${1}" == "--prod" ] && f=".env.prod" || f=".env.dev"
-  exec dotenvx run \
-    --overload \
-    -f .env.shared \
-    -f "${f}" -- \
-      "${@}"
-fi
+    # --
+    # Load the Env File
+    #   You don't really need one if
+    #   you really don't want one, it'll
+    #   just use .env.shared
+    # --
+    env_file = None
+    if args.local: env_file = ".env.local"
+    elif args.prod: env_file = ".env.prod"
+    elif args.dev: env_file = ".env.dev"
+
+    # --
+    # Construct the Dotenvx Cmd
+    # --
+    dotenvx_cmd = ["dotenvx", "run", "--strict", "-f", ".env.shared"]
+    if env_file is not None:
+        dotenvx_cmd.extend(["-f", env_file])
+        dotenvx_cmd.append(
+            "--overload"
+        )
+
+    if args.verbose is not True:
+        dotenvx_cmd.append(
+            "--quiet"
+        )
+
+    pnpm_cmd=[]
+    if args.pnpm:
+        pnpm_cmd = ["pnpm", "--filter", args.pnpm]
+        if args.verbose is not True:
+            pnpm_cmd.append(
+                "--silent"
+            )
+
+        # --
+        # Offer a bit of a shortcut
+        #   for CDK and CDKtf because why
+        #   not, we often run these with a lot
+        #   of args
+        # --
+        if args.pnpm in ["cdk", "cdktf"]:
+            pnpm_cmd.append("exec")
+            pnpm_cmd.append(
+              args.pnpm
+            )
+        # --
+        # Make nuxi and eslint
+        #   easier to run, because this
+        #   just makes life easier
+        # --
+        elif remaining_args[0] in ["nuxi", "eslint"]:
+            pnpm_cmd.append(
+                "exec"
+            )
+        else:
+            # There could be more later!
+            if remaining_args[0] not in ["run", "exec"]:
+                pnpm_cmd.append(
+                    "run"
+                )
+
+    # --
+    # Sometimes we just write
+    #   bad code and we need to be
+    #   able to check out what's
+    #   going on!
+    # --
+    if args.verbose:
+        print("Pnpm Cmd: ", pnpm_cmd)
+        print("Remaining Args: ", remaining_args)
+        print("Dotenvx Cmd: ", dotenvx_cmd)
+        print("Args: ", args)
+
+    # --
+    # Exec & Bail
+    # --
+    os.execvp(
+        dotenvx_cmd[0],
+        dotenvx_cmd + ["--"] +
+            pnpm_cmd + remaining_args
+    )
+
+if __name__ == "__main__":
+    main()
