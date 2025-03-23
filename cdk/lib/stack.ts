@@ -124,11 +124,14 @@ export class NuxtStack extends Stack {
      * in dev because we don't need more than
      * one role for the _entire_ account
      */
-    new Role(this, 'ResourceGroupsRole', {
-      assumedBy: new ServicePrincipal(
-        'resource-groups.amazonaws.com',
-      ),
-    });
+    if (stage.env == 'dev') {
+      new Role(this, 'ResourceGroupsRole', {
+        roleName: 'AWSResourceGroupsRoleForMyApplications',
+        assumedBy: new ServicePrincipal(
+          'resource-groups.amazonaws.com',
+        ),
+      });
+    }
     
     /**
      * Logs
