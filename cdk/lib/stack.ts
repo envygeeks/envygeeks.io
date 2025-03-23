@@ -100,7 +100,10 @@ export interface NuxtStackProps extends StackProps {
  * and AWS pricing updates.
  */
 export class NuxtStack extends Stack {
-  constructor (scope: Construct, id: string, props?: NuxtStackProps) {
+  constructor (
+    scope: Construct,
+    id: string, props?: StackProps
+  ) {
     super(scope, id, props);
     const stage = (scope as Stage);
     const cdkRoot = path.join(__dirname, '..')
