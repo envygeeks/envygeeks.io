@@ -12,6 +12,7 @@
 # --
 # Cdk/Terraform
 # --
+/cdk/dns.json
 /cdk/cdk.*.json
 /cdktf/cdktf.log
 /cdktf/.terraform

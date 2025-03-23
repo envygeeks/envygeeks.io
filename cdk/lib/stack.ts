@@ -1,4 +1,5 @@
 import {
+  Aspects,
   AssetHashType,
   CfnOutput,
   DockerImage,
@@ -7,6 +8,7 @@ import {
   RemovalPolicy,
   Size,
   Stack,
+  Tags,
   type StackProps,
 } from 'aws-cdk-lib';
 import {
@@ -55,6 +57,11 @@ import {
 } from 'aws-cdk-lib/aws-lambda';
 import { LogGroup } from 'aws-cdk-lib/aws-logs';
 import {
+  CnameRecord,
+  MxRecord,
+  PublicHostedZone,
+} from 'aws-cdk-lib/aws-route53';
+import {
   BlockPublicAccess,
   Bucket,
   BucketAccessControl,
@@ -68,21 +75,19 @@ import {
   AwsCustomResourcePolicy,
   PhysicalResourceId,
 } from 'aws-cdk-lib/custom-resources';
-import { execSync } from 'node:child_process';
-import type { Construct } from 'constructs';
-import * as fs from 'node:fs';
-import * as path from 'node:path';
+import { get } from 'env-var';
 import type { Stage } from './stage';
-
-export interface NuxtStackProps extends StackProps {
-  imgixOrigin: string,
-}
+import type { Construct } from 'constructs';
+import { execSync } from 'node:child_process';
+import * as path from 'node:path';
+import * as fs from 'node:fs';
 
 /**
  * Cost Estimate (per month) for the Entire
  * Stack with X-Ray enabled, 100K requests/month,
- * and an average of 4 images per page, excluding
- * free tier usage (free services are calculated)
+ * and an average of 4 images per page,
+ * excluding free tier usage (free
+ * services are calculated)
  *
  * | Component         | Estimated Cost      |
  * |-------------------|---------------------|
@@ -107,11 +112,11 @@ export class NuxtStack extends Stack {
     super(scope, id, props);
     const stage = (scope as Stage);
     const cdkRoot = path.join(__dirname, '..')
-    const imgixOrigin = props?.imgixOrigin;
     const root = path.join(
       __dirname, '../..'
     );
     
+    const imgixOrigin = get('IMGIX_ORIGIN').required().asString();
     if (!imgixOrigin) {
       throw new Error(
         'imgixOrigin is required'
