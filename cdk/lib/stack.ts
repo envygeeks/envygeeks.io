@@ -120,6 +120,9 @@ export class NuxtStack extends Stack {
     
     /**
      * AWS myApplications
+     * We really only want to create this
+     * in dev because we don't need more than
+     * one role for the _entire_ account
      */
     new Role(this, 'ResourceGroupsRole', {
       assumedBy: new ServicePrincipal(
