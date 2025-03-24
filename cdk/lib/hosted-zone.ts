@@ -1,26 +1,10 @@
 import { Construct } from 'constructs';
-import { Aws, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
+import * as iam from "aws-cdk-lib/aws-iam";
+import { Aws, CfnOutput, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
+import * as route53 from 'aws-cdk-lib/aws-route53';
+import * as kms from 'aws-cdk-lib/aws-kms';
 import * as records from '../dns.json';
 import { get } from 'env-var';
-import {
-  TxtRecord,
-  KeySigningKeyStatus,
-  MxRecord as CdkMxRecord,
-  CnameRecord as CdkCnameRecord,
-  PublicHostedZone,
-  KeySigningKey,
-  CfnDNSSEC,
-} from 'aws-cdk-lib/aws-route53';
-import {
-  Key,
-  KeySpec,
-  KeyUsage
-} from 'aws-cdk-lib/aws-kms';
-import {
-  Effect,
-  PolicyStatement,
-  ServicePrincipal,
-} from 'aws-cdk-lib/aws-iam';
 
 /**
  * JSON: {
@@ -53,8 +37,13 @@ type TxtRecords = Record<
   string, string[]
 >;
 
-export class HostedZonesStack extends Stack {
-  public prod: PublicHostedZone; public dev: PublicHostedZone;
+export class HostedZone extends Stack {
+  public hostedZone: route53.PublicHostedZone
+  
+  get hostedZoneId() { return this.hostedZone.hostedZoneId }
+  get hostedZoneNameServers() { return this.hostedZone.hostedZoneNameServers }
+  get hostedZoneArn() { return this.hostedZone.hostedZoneArn }
+  get zoneName() { return this.hostedZone.zoneName }
   
   /**
    * IF YOUR DOMAIN STOPS WORKING:
@@ -71,82 +60,84 @@ export class HostedZonesStack extends Stack {
      * Prod Hosted Zone
      * Route53
      */
-    const prodZoneName = get('PROD_ZONE_NAME').required().asString();
-    this.prod = new PublicHostedZone(
+    const zoneName = get('ZONE_NAME').required().asString();
+    this.hostedZone = new route53.PublicHostedZone(
       this, 'HostedZone', {
         addTrailingDot: true,
-        zoneName: prodZoneName,
+        zoneName: zoneName,
         caaAmazon: true,
-      }
+      },
     );
     
     /**
      * DNSSec
      */
-    const prodDNSKey = new Key(
+    const dnsKey = new kms.Key(
       this, 'DNSSecKey', {
         enableKeyRotation: false,
-        keySpec: KeySpec.ECC_NIST_P256,
+        keySpec: kms.KeySpec.ECC_NIST_P256,
         removalPolicy: RemovalPolicy.DESTROY,
-        keyUsage: KeyUsage.SIGN_VERIFY,
-        alias: 'Dns/Prod',
-      }
+        keyUsage: kms.KeyUsage.SIGN_VERIFY,
+        alias: 'Dns/Sec',
+      },
     );
     
-    prodDNSKey.addToResourcePolicy(
-      new PolicyStatement({
-        effect: Effect.ALLOW,
+    dnsKey.addToResourcePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
         principals: [
-          new ServicePrincipal(
-            "dnssec-route53.amazonaws.com"
-          )
+          new iam.ServicePrincipal(
+            "dnssec-route53.amazonaws.com",
+          ),
         ],
         actions: [
           "kms:DescribeKey",
           "kms:GetPublicKey",
-          "kms:Sign"
+          "kms:Sign",
         ],
         resources: ["*"],
         conditions: {
           "StringEquals": {
-            "aws:SourceAccount": Aws.ACCOUNT_ID
-          }
-        }
-      })
+            "aws:SourceAccount": Aws.ACCOUNT_ID,
+          },
+        },
+      }),
     );
     
-    prodDNSKey.addToResourcePolicy(
-      new PolicyStatement({
-        effect: Effect.ALLOW,
+    dnsKey.addToResourcePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
         principals: [
-          new ServicePrincipal(
-            "dnssec-route53.amazonaws.com"
-          )
+          new iam.ServicePrincipal(
+            "dnssec-route53.amazonaws.com",
+          ),
         ],
         actions: [
-          "kms:CreateGrant"
+          "kms:CreateGrant",
         ],
         resources: ["*"],
         conditions: {
-          "Bool": { "kms:GrantIsForAWSResource": true },
+          "Bool": {"kms:GrantIsForAWSResource": true},
           "StringEquals": {
-            "aws:SourceAccount": Aws.ACCOUNT_ID
+            "aws:SourceAccount": Aws.ACCOUNT_ID,
           },
-        }
-      })
+        },
+      }),
     );
     
-    new KeySigningKey(
+    const signingKey = new route53.KeySigningKey(
       this, 'DNSSecSigningKey', {
-        kmsKey: prodDNSKey,
-        status: KeySigningKeyStatus.ACTIVE,
-        hostedZone: this.prod,
-      }
+        hostedZone: this.hostedZone,
+        status: route53.KeySigningKeyStatus.ACTIVE,
+        kmsKey: dnsKey,
+      },
     )
     
-    new CfnDNSSEC(this, 'DNSSec', {
-      hostedZoneId: this.prod.hostedZoneId
-    });
+    const sec = new route53.CfnDNSSEC(
+      this, 'DNSSec', {
+        hostedZoneId: this.hostedZone.hostedZoneId,
+      },
+    );
     
     /**
      * dns.json:
@@ -159,8 +150,8 @@ export class HostedZonesStack extends Stack {
      */
     if (records.mx) {
       const mxRecords: MxRecords = records.mx;
-      new CdkMxRecord(this, 'Mx', {
-        values: mxRecords, zone: this.prod,
+      new route53.MxRecord(this, 'Mx', {
+        values: mxRecords, zone: this.hostedZone,
       });
     }
     
@@ -181,10 +172,10 @@ export class HostedZonesStack extends Stack {
         const record = name == "@"
           ? {
             values: txtRecords[name],
-            zone: this.prod
+            zone: this.hostedZone,
           }
           : {
-            zone: this.prod,
+            zone: this.hostedZone,
             values: txtRecords[name],
             name: name,
           };
@@ -194,7 +185,7 @@ export class HostedZonesStack extends Stack {
          * record should just be empty because
          * it uses the hostname
          */
-        new TxtRecord(this,
+        new route53.TxtRecord(this,
           `Txt${name}`, record,
         )
       }
@@ -211,14 +202,19 @@ export class HostedZonesStack extends Stack {
      */
     if (records.cname) {
       for (const record of records.cname as CnameRecords) {
-        new CdkCnameRecord(
+        new route53.CnameRecord(
           this, `Cname${record.name}`, {
             recordName: record.name,
             domainName: record.value,
-            zone: this.prod,
-          }
+            zone: this.hostedZone,
+          },
         );
       }
     }
+    
+    new CfnOutput(this, 'HostedZoneId', { value: this.hostedZoneId });
+    new CfnOutput(this, 'HostedZoneNameServers', { value: this.hostedZoneNameServers?.join(',') ?? '' });
+    new CfnOutput(this, 'HostedZoneArn', { value: this.hostedZoneArn });
+    new CfnOutput(this, 'ZoneName', { value: this.zoneName });
   }
 }

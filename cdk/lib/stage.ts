@@ -1,21 +1,21 @@
-import type { Construct } from 'constructs';
-import type { HostedZonesStack } from './hosted-zones';
 import { App, type Env } from './config';
-import { NuxtStack } from './stack';
+import type { HostedZone } from './hosted-zone';
+import type { Construct } from 'constructs';
+import { Nuxt } from './nuxt';
 import {
-  Stage as CdkStage, Tags,
+  Stage as CdkStage, CfnOutput, Tags,
   type StageProps as CdkStageProps,
 } from 'aws-cdk-lib';
 
 export interface StageProps
 extends CdkStageProps {
-  hostedZones: HostedZonesStack;
+  hostedZone: HostedZone;
 }
 
 /**
  */
 export class Stage extends CdkStage {
-  public hostedZones: HostedZonesStack;
+  public hostedZone: HostedZone;
   public app: App;
   public env: Env;
   
@@ -24,14 +24,14 @@ export class Stage extends CdkStage {
     private readonly props?: StageProps,
   ) {
     super(scope, id, props);
-    if (!props?.hostedZones) {
+    if (!props?.hostedZone) {
       throw new Error(
         'Hosted Zone is required'
       );
     }
     
-    this.hostedZones =
-      props.hostedZones;
+    this.hostedZone =
+      props.hostedZone;
   }
   
   
@@ -52,7 +52,7 @@ export class Stage extends CdkStage {
    */
   protected createNuxtStack() {
     this.tagIt();
-    new NuxtStack(
+    new Nuxt(
       this, 'Nuxt', this.props,
     );
   }
