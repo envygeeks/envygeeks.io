@@ -4,8 +4,8 @@
   "scripts": {
     "deploy:dev": "../script/with-env --dev --pnpm=cdk deploy Dev/*",
     "deploy:prod": "../script/with-env --prod --pnpm=cdk deploy Prod/*",
-    "deploy:roles": "ONLY=Roles ../script/with-env --dev --pmpm=cdk deploy Roles",
-    "deploy:hosted-zone": "ONLY=HostedZone ../script/with-env --dev --pnpm=cdk deploy HostedZone",
+    "deploy:roles": "../script/with-env --dev --pnpm=cdk deploy Roles",
+    "deploy:hosted-zone": "../script/with-env --dev --pnpm=cdk deploy HostedZone",
     "destroy": "../script/with-env --dev --pnpm=cdk destroy --require-approval=never",
     "diff": "../script/with-env --dev --pnpm=cdk diff --require-approval=never",
     "synth": "../script/with-env --dev --pnpm=cdk synth --unstable=gc",
