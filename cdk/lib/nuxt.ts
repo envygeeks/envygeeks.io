@@ -322,11 +322,15 @@ export class Nuxt extends Stack {
     const ssrAuthorizer = new Function(
       this, 'SsrAuthorizer', {
         runtime: Runtime.NODEJS_18_X,
-        handler: 'authorizer.handler',
-        code: Code.fromAsset(path.join(this.cdkRoot, 'authorizer')),
+        handler: 'index.handler',
         timeout: Duration.seconds(5),
         tracing: Tracing.ACTIVE,
         memorySize: 128,
+        code: Code.fromAsset(
+          path.join(
+            this.cdkRoot, 'lambda/authorizer'
+          )
+        ),
         environment: {
           NODE_ENV: 'production',
           ORIGIN_TOKEN: ssrTokenResolver,
