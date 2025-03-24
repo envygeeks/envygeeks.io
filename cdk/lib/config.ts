@@ -19,6 +19,7 @@ export const Envs = [
  * Interfaces
  */
 export type App = string;
+export const DefaultEnv = "dev"
 export type Env = typeof Envs[number];
 export type Region = typeof Regions[
   number

@@ -65,6 +65,11 @@ def main():
             pnpm_cmd.append(
               args.pnpm
             )
+
+            if args.verbose:
+                pnpm_cmd.append(
+                    "--verbose"
+                )
         # --
         # Make nuxi and eslint
         #   easier to run, because this

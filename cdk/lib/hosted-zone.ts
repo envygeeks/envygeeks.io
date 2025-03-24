@@ -213,7 +213,6 @@ export class HostedZone extends Stack {
     }
     
     new CfnOutput(this, 'HostedZoneId', { value: this.hostedZoneId });
-    new CfnOutput(this, 'HostedZoneNameServers', { value: this.hostedZoneNameServers?.join(',') ?? '' });
     new CfnOutput(this, 'HostedZoneArn', { value: this.hostedZoneArn });
     new CfnOutput(this, 'ZoneName', { value: this.zoneName });
   }
