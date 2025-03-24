@@ -5,6 +5,7 @@
     "deploy:dev": "../script/with-env --dev --pnpm=cdk deploy Dev/*",
     "deploy:prod": "../script/with-env --prod --pnpm=cdk deploy Prod/*",
     "deploy:roles": "../script/with-env --dev --pnpm=cdk deploy Roles",
+    "deploy:github": "../script/with-env --dev --pnpm=cdk deploy Github",
     "deploy:hosted-zone": "../script/with-env --dev --pnpm=cdk deploy HostedZone",
     "destroy": "../script/with-env --dev --pnpm=cdk destroy --require-approval=never",
     "diff": "../script/with-env --dev --pnpm=cdk diff --require-approval=never",
