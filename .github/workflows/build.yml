@@ -16,5 +16,5 @@ jobs:
         with:
           cache: pnpm
           node-version: 18
-      - run: pnpm install
+      - run: pnpm install --reporter
       - run: pnpm --filter=app build
