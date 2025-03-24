@@ -9,7 +9,7 @@ import {
 
 export interface StageProps
 extends CdkStageProps {
-  hostedZone: HostedZone;
+  hostedZone: HostedZone|undefined;
 }
 
 /**
