@@ -97,10 +97,9 @@ export class Nuxt extends Stack {
     id: string, props?: StackProps
   ) {
     super(scope, id, props);
-    const stage = (scope as Stage);
-    const cdkRoot = path.join(__dirname, '..')
-    const root = path.join(
-      __dirname, '../..'
+    const self = this;
+    const stage = (
+      scope as Stage
     );
     
     const imgixOrigin = get('IMGIX_ORIGIN').required().asString();
@@ -169,8 +168,9 @@ export class Nuxt extends Stack {
      * Main Lambda layer
      */
     const ssrCode = Code.fromAsset(
-      root, {
-        assetHashType: AssetHashType.SOURCE,
+      this.root, {
+        assetHashType: AssetHashType.CUSTOM,
+        assetHash: this.assetHash,
         exclude: ['node_modules'],
         bundling: {
           image: backupImg,
@@ -185,7 +185,7 @@ export class Nuxt extends Stack {
 
                 execSync('pnpm --filter=app cleanup', io);
                 execSync(`pnpm --filter=app build:${stage.env}`, io);
-                const server = path.join(root, 'app/.output/server');
+                const server = path.join(self.root, 'app/.output/server');
                 fs.cpSync(server, dest, {
                   recursive: true,
                 });
@@ -208,8 +208,9 @@ export class Nuxt extends Stack {
      * our Lambda!
      */
     const ssrDepsCode = Code.fromAsset(
-      root, {
-        assetHashType: AssetHashType.SOURCE,
+      this.root, {
+        assetHashType: AssetHashType.CUSTOM,
+        assetHash: this.assetHash,
         bundling: {
           image: backupImg,
           local: {
@@ -223,7 +224,7 @@ export class Nuxt extends Stack {
 
                 const _var = 'NUXT_OUTPUT_DIR=.dep';
                 const nodeModules = path.join(
-                  root, 'app/.dep/server/node_modules'
+                  self.root, 'app/.dep/server/node_modules'
                 );
 
                 execSync(`${_var} pnpm --filter=app cleanup`, io);
@@ -281,7 +282,7 @@ export class Nuxt extends Stack {
         memoryLimit: 1024,
         sources: [
           Source.asset(path.join(
-            root, 'app/.output/public'
+            this.root, 'app/.output/public'
           )),
         ],
       },
@@ -322,7 +323,7 @@ export class Nuxt extends Stack {
       this, 'SsrAuthorizer', {
         runtime: Runtime.NODEJS_18_X,
         handler: 'authorizer.handler',
-        code: Code.fromAsset(path.join(cdkRoot, 'authorizer')),
+        code: Code.fromAsset(path.join(this.cdkRoot, 'authorizer')),
         timeout: Duration.seconds(5),
         tracing: Tracing.ACTIVE,
         memorySize: 128,
@@ -909,5 +910,41 @@ export class Nuxt extends Stack {
     new CfnOutput(this, 'ImgixAccessKeyId', {
       value: accessKey.ref,
     });
+  }
+  
+  /**
+   * Resolves and returns
+   * the root directory path for
+   * the CDK app
+   */
+  private get cdkRoot() {
+    return path.join(
+      __dirname, '..'
+    );
+  }
+  
+  /**
+   * Resolves and returns
+   * the absolute path to the root
+   * directory of the monorepo
+   * project.
+   */
+  private get root() {
+    return path.join(
+      __dirname, '..', '..'
+    );
+  }
+  
+  /**
+   * Generates and returns a
+   * unique hash for the assets
+   * managed by the project.
+   */
+  private get assetHash(): string {
+    return execSync(
+      `git ls-files -s nuxt | git hash-object --stdin`, {
+        encoding: 'utf8', cwd: this.root,
+      }
+    ).trim();
   }
 }
