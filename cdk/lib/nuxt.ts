@@ -104,7 +104,7 @@ import * as fs from 'node:fs';
  * Note: Actual costs vary by region, usage,
  * and AWS pricing updates.
  */
-export class NuxtStack extends Stack {
+export class Nuxt extends Stack {
   constructor (
     scope: Construct,
     id: string, props?: StackProps
