@@ -36,7 +36,7 @@
     "daisyui": "^4.12.23",
     "dayjs-nuxt": "^2.1.11",
     "happy-dom": "^17.4.4",
-    "nuxt": "^3.15.3",
+    "nuxt": "^3.16.0",
     "playwright-core": "^1.51.0",
     "ufo": "^1.5.4",
     "vitest": "^3.0.8"
