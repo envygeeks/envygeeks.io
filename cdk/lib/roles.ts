@@ -1,6 +1,7 @@
 import * as iam from "aws-cdk-lib/aws-iam";
 import type { Construct } from 'constructs';
 import { Stack, Aws, Duration } from "aws-cdk-lib";
+import * as cdk from "aws-cdk-lib";
 import * as path from 'node:path';
 
 export class Roles extends Stack {
@@ -13,7 +14,7 @@ export class Roles extends Stack {
      * in dev because we don't need more than
      * one role for the _entire_ account
      */
-    new iam.Role(
+    const resourceGroupRole = new iam.Role(
       this, 'ResourceGroupsRole', {
         roleName: 'AWSResourceGroupsRoleForMyApplications',
         assumedBy: new iam.ServicePrincipal(
@@ -21,5 +22,17 @@ export class Roles extends Stack {
         ),
       }
     );
+    
+    new cdk.CfnOutput(
+      this, 'ResourceGroupsRoleName', {
+        value: resourceGroupRole.roleName,
+      }
+    )
+    
+    new cdk.CfnOutput(
+      this, 'ResourceGroupsRoleArn', {
+        value: resourceGroupRole.roleArn,
+      }
+    )
   }
 }
