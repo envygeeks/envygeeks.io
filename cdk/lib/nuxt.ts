@@ -5,9 +5,12 @@ import { execSync } from 'node:child_process';
 import * as cf from 'aws-cdk-lib/aws-cloudfront';
 import * as agw from 'aws-cdk-lib/aws-apigateway';
 import * as agw2 from 'aws-cdk-lib/aws-apigatewayv2';
+import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as s3Deployment from 'aws-cdk-lib/aws-s3-deployment';
+import * as targets from 'aws-cdk-lib/aws-route53-targets';
 import * as scm from 'aws-cdk-lib/aws-secretsmanager';
+import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as cr from 'aws-cdk-lib/custom-resources';
 import * as lambda  from 'aws-cdk-lib/aws-lambda';
 import { LogGroup } from 'aws-cdk-lib/aws-logs';
@@ -928,6 +931,39 @@ export class Nuxt extends cdk.Stack {
     };
     
     /**
+     * HostedZone
+     *   Used for validation of
+     *   certificates and adding the
+     *   routes for the CDN
+     */
+    const zoneName = get('ZONE_NAME').required().asString();
+    const hostedZone = route53.HostedZone.fromLookup(
+      this, 'HostedZone', {
+        domainName: zoneName
+      }
+    );
+    
+    /**
+     * Cert Validation
+     */
+    let certValidation = acm
+      .CertificateValidation
+      .fromDns(
+        hostedZone
+      )
+    
+    /**
+     * Certificate
+     */
+    let domain = get('DOMAIN').required().asString();
+    const certificate = new acm.Certificate(
+      this, `DevCertificate`, {
+        validation: certValidation,
+        domainName: domain,
+      }
+    );
+    
+    /**
      * CDN
      */
     const cdn = new cf.Distribution(
@@ -937,6 +973,8 @@ export class Nuxt extends cdk.Stack {
         logFilePrefix: 'cdn/',
         httpVersion: cf.HttpVersion.HTTP2_AND_3,
         defaultBehavior: ssrBehavior,
+        certificate: certificate,
+        domainNames: [domain],
         additionalBehaviors: {
           '/fonts/*': staticBehavior,
           '/assets/*': imgBehavior,
@@ -968,6 +1006,19 @@ export class Nuxt extends cdk.Stack {
         value: cdn.distributionArn,
       }
     )
+    
+    /**
+     * CDN Alias
+     */
+    new route53.ARecord(
+      this, 'CdnRecord', {
+        zone: hostedZone,
+        recordName: domain,
+        target: route53.RecordTarget.fromAlias(
+          new targets.CloudFrontTarget(cdn) // Use the appropriate target
+        ),
+      }
+    );
     
     /**
      * Invalidate

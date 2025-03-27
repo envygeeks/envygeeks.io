@@ -86,7 +86,10 @@ export class HostedZone extends cdk.Stack {
    *   added to your root zone on Route 53 as a
    *   DS Record with the DS Record value
    */
-  constructor (scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor (
+    scope: Construct,
+    id: string, props?: cdk.StackProps
+  ) {
     super(scope, id, props);
     
     /**

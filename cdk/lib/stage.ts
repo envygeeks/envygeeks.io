@@ -1,37 +1,21 @@
 import { App, type Env } from './config';
-import type { HostedZone } from './hosted-zone';
 import type { Construct } from 'constructs';
+import * as cdk from 'aws-cdk-lib';
 import { Nuxt } from './nuxt';
-import {
-  Stage as CdkStage, CfnOutput, Tags,
-  type StageProps as CdkStageProps,
-} from 'aws-cdk-lib';
-
-export interface StageProps
-extends CdkStageProps {
-  hostedZone: HostedZone|undefined;
-}
 
 /**
  */
-export class Stage extends CdkStage {
-  public hostedZone: HostedZone;
+export class Stage extends cdk.Stage {
   public app: App;
   public env: Env;
   
   constructor(
     scope: Construct, id: string,
-    private readonly props?: StageProps,
+    private readonly props?: cdk.StageProps,
   ) {
-    super(scope, id, props);
-    if (!props?.hostedZone) {
-      throw new Error(
-        'Hosted Zone is required'
-      );
-    }
-    
-    this.hostedZone =
-      props.hostedZone;
+    super(
+      scope, id, props
+    );
   }
   
   
@@ -40,8 +24,8 @@ export class Stage extends CdkStage {
    * @protected
    */
   private tagIt() {
-    Tags.of(this).add('env', this.env);
-    Tags.of(this).add(
+    cdk.Tags.of(this).add('env', this.env);
+    cdk.Tags.of(this).add(
       'app', this.app
     );
   }

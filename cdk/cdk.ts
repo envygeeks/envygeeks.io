@@ -37,7 +37,6 @@ hostedZone = new HostedZone(
 );
 new Dev(
   app, 'Dev', {
-    hostedZone,
     env: {
       account, region
     }
@@ -45,7 +44,6 @@ new Dev(
 );
 new Prod(
   app, 'Prod', {
-    hostedZone,
     env: {
       account, region
     }
