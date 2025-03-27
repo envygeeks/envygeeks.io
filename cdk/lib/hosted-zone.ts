@@ -1,9 +1,9 @@
 import { Construct } from 'constructs';
 import * as iam from "aws-cdk-lib/aws-iam";
-import { Aws, CfnOutput, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
 import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as kms from 'aws-cdk-lib/aws-kms';
 import * as records from '../dns.json';
+import * as cdk from 'aws-cdk-lib';
 import { get } from 'env-var';
 
 /**
@@ -37,13 +37,46 @@ type TxtRecords = Record<
   string, string[]
 >;
 
-export class HostedZone extends Stack {
+export class HostedZone extends cdk.Stack {
   public hostedZone: route53.PublicHostedZone
   
-  get hostedZoneId() { return this.hostedZone.hostedZoneId }
-  get hostedZoneNameServers() { return this.hostedZone.hostedZoneNameServers }
-  get hostedZoneArn() { return this.hostedZone.hostedZoneArn }
-  get zoneName() { return this.hostedZone.zoneName }
+  /**
+   * Delegate -> hostedZone
+   * The HostedZone id on in AWS
+   *   helps you determine which zone
+   *   you are working with
+   */
+  get hostedZoneId (): string {
+    return this.hostedZone.hostedZoneId
+  }
+  
+  /**
+   * Delegate -> hostedZone
+   * The hostedZone name servers so you
+   *   can repoint your domain
+   */
+  get hostedZoneNameServers (): string[]|undefined {
+    return this.hostedZone.hostedZoneNameServers
+  }
+  
+  /**
+   * Delegate -> hostedZone
+   *   The full ARN of the hosted zone
+   *   so you can use it in AWS API Calls
+   *   when you need to
+   */
+  get hostedZoneArn ():string {
+    return this.hostedZone.hostedZoneArn
+  }
+  
+  /**
+   * Delegate -> hostedZone
+   *   The zone name in AWS aka
+   *   the domain name
+   */
+  get zoneName ():string {
+    return this.hostedZone.zoneName
+  }
   
   /**
    * IF YOUR DOMAIN STOPS WORKING:
@@ -53,7 +86,7 @@ export class HostedZone extends Stack {
    *   added to your root zone on Route 53 as a
    *   DS Record with the DS Record value
    */
-  constructor (scope: Construct, id: string, props?: StackProps) {
+  constructor (scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
     
     /**
@@ -69,18 +102,43 @@ export class HostedZone extends Stack {
       },
     );
     
+    new cdk.CfnOutput(
+      this, 'HostedZoneId', {
+        value: this.hostedZone.hostedZoneId,
+      },
+    );
+    
+    new cdk.CfnOutput(
+      this, 'HostedZoneArn', {
+        value: this.hostedZone.hostedZoneArn,
+      },
+    );
+    
+    new cdk.CfnOutput(
+      this, 'HostedZoneNameServers', {
+        value: cdk.Fn.join(
+          ', ', this.hostedZoneNameServers as unknown as string[]
+        )
+      }
+    )
+    
     /**
      * DNSSec
      */
     const dnsKey = new kms.Key(
-      this, 'DNSSecKey', {
+      this, 'DnsKey', {
         enableKeyRotation: false,
         keySpec: kms.KeySpec.ECC_NIST_P256,
-        removalPolicy: RemovalPolicy.DESTROY,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
         keyUsage: kms.KeyUsage.SIGN_VERIFY,
         alias: 'Dns/Sec',
       },
     );
+    
+    new cdk.CfnOutput(this, 'DnsKeyId', {value: dnsKey.keyId})
+    new cdk.CfnOutput(this, 'DnsKeyArn', {
+      value: dnsKey.keyArn,
+    });
     
     dnsKey.addToResourcePolicy(
       new iam.PolicyStatement({
@@ -98,7 +156,7 @@ export class HostedZone extends Stack {
         resources: ["*"],
         conditions: {
           "StringEquals": {
-            "aws:SourceAccount": Aws.ACCOUNT_ID,
+            "aws:SourceAccount": cdk.Aws.ACCOUNT_ID,
           },
         },
       }),
@@ -119,22 +177,34 @@ export class HostedZone extends Stack {
         conditions: {
           "Bool": {"kms:GrantIsForAWSResource": true},
           "StringEquals": {
-            "aws:SourceAccount": Aws.ACCOUNT_ID,
+            "aws:SourceAccount": cdk.Aws.ACCOUNT_ID,
           },
         },
       }),
     );
     
     const signingKey = new route53.KeySigningKey(
-      this, 'DNSSecSigningKey', {
+      this, 'SigningKey', {
         hostedZone: this.hostedZone,
         status: route53.KeySigningKeyStatus.ACTIVE,
         kmsKey: dnsKey,
       },
     )
     
+    new cdk.CfnOutput(
+      this, 'SigningKeyName', {
+        value: signingKey.keySigningKeyName,
+      },
+    );
+    
+    new cdk.CfnOutput(
+      this, 'SigningKeyId', {
+        value: signingKey.keySigningKeyId,
+      },
+    );
+    
     const sec = new route53.CfnDNSSEC(
-      this, 'DNSSec', {
+      this, 'DNSSEC', {
         hostedZoneId: this.hostedZone.hostedZoneId,
       },
     );
@@ -211,9 +281,5 @@ export class HostedZone extends Stack {
         );
       }
     }
-    
-    new CfnOutput(this, 'HostedZoneId', { value: this.hostedZoneId });
-    new CfnOutput(this, 'HostedZoneArn', { value: this.hostedZoneArn });
-    new CfnOutput(this, 'ZoneName', { value: this.zoneName });
   }
 }
