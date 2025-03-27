@@ -3,15 +3,13 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import * as cr from 'aws-cdk-lib/custom-resources';
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import type { Construct } from 'constructs';
-import * as path from 'node:path';
-import type { Roles } from './roles';
-import { get } from 'env-var';
 import { NagSuppressions } from "cdk-nag";
+import * as path from 'node:path';
+import { get } from 'env-var';
 
-const CdkHash: string = "hnb659fds" as const
-const GithubTokenHost: string = "token.actions.githubusercontent.com" as const
-const GithubThumbprintHash: string = "6938fd4d98bab03faadb97b34396831e3780aea1" as const
-const GithubPrincipal: string = "sts.amazonaws.com" as const
+const TokenHost: string = "token.actions.githubusercontent.com" as const
+const ThumbprintHash: string = "6938fd4d98bab03faadb97b34396831e3780aea1" as const
+const Principal: string = "sts.amazonaws.com" as const
 
 export class Github extends cdk.Stack {
   constructor (scope: Construct, id: string, props: cdk.StackProps) {
@@ -21,30 +19,29 @@ export class Github extends cdk.Stack {
      * OIDC Provider
      */
     const provider = new iam.OpenIdConnectProvider(
-      this, 'Github-OIDC', {
-        url: `https://${GithubTokenHost}`,
-        clientIds: [GithubPrincipal],
+      this, 'Oidc', {
+        url: `https://${TokenHost}`,
+        clientIds: [Principal],
         thumbprints: [
-          GithubThumbprintHash,
+          ThumbprintHash,
         ],
       },
     );
     
-    const repoOwner = get("REPO_OWNER").required().asString();
-    const repoFilter = get("REPO_FILTER").required().asString();
-    const repoName = get("REPO_NAME").required().asString();
-    const webPrincipal = new iam.WebIdentityPrincipal(
-      provider.openIdConnectProviderArn, {
-        StringLike: {
-          [`${GithubTokenHost}:sub`]: [
-            `repo:${repoOwner}/${repoName}:${repoFilter}`,
-          ],
-        },
-      },
+    new cdk.CfnOutput(
+      this, 'OidcProviderArn', {
+        value: provider.openIdConnectProviderArn,
+      }
     )
     
-    const roleHandler = new lambda.Function(
-      this, 'RoleHandler', {
+    /**
+     * Since we don't know what
+     * the Arn of any given CDK role, we
+     * created a Lambda and Custom Resource
+     * to grab those role Arn's for us!
+     */
+    const cdkRoleFinder = new lambda.Function(
+      this, 'CdkRoleFinder', {
         handler: 'index.handler',
         timeout: cdk.Duration.seconds(30),
         runtime: lambda.Runtime.NODEJS_18_X,
@@ -56,7 +53,19 @@ export class Github extends cdk.Stack {
       }
     );
     
-    roleHandler.addToRolePolicy(
+    new cdk.CfnOutput(
+      this, 'CdkRoleFinderArn', {
+        value: cdkRoleFinder.functionArn,
+      }
+    )
+    
+    new cdk.CfnOutput(
+      this, 'CdkRoleFinderName', {
+        value: cdkRoleFinder.functionName,
+      }
+    )
+    
+    cdkRoleFinder.addToRolePolicy(
       new iam.PolicyStatement({
         resources: ['*'],
         actions: [
@@ -68,31 +77,31 @@ export class Github extends cdk.Stack {
     
     // TODO: Last checked 03/24/2025
     NagSuppressions.addResourceSuppressions(
-      roleHandler, [
+      cdkRoleFinder, [
         { id: 'AwsSolutions-IAM4', reason: 'CloudWatch logging' },
         { id: 'AwsSolutions-IAM5', reason: 'Needed for IAM Role Discovery' },
         { id: 'AwsSolutions-L1', reason: 'Global runtime matching' }
       ], true
     );
     
-    const roleProvider  = new cr.Provider(
+    const cdkRoleProvider  = new cr.Provider(
       this, 'CdkRoleProvider', {
-        onEventHandler: roleHandler,
+        onEventHandler: cdkRoleFinder,
       }
     );
     
     // TODO: Last checked 03/24/2025
     NagSuppressions.addResourceSuppressions(
-      roleProvider, [
+      cdkRoleProvider, [
         { id: 'AwsSolutions-IAM5', reason: 'Managed by CDK' },
         { id: 'AwsSolutions-IAM4', reason: 'CloudWatch logging' },
         { id: 'AwsSolutions-L1', reason: 'Managed by CDK' }
       ], true
     );
     
-    const roleResource = new cdk.CustomResource(
-      this, 'CdkRoleResource', {
-        serviceToken: roleProvider.serviceToken,
+    const cdkRoleProviderResource = new cdk.CustomResource(
+      this, 'CdkRoleProviderResource', {
+        serviceToken: cdkRoleProvider.serviceToken,
         properties: {
           cdkRoles: [
             'file-publishing',
@@ -102,8 +111,21 @@ export class Github extends cdk.Stack {
       }
     );
 
-    const cdkRoles = roleResource.getAtt('cdkRoles').toStringList();
-    const webPrincipalPolicy = new iam.PolicyStatement({
+    const repoOwner = get("REPO_OWNER").required().asString();
+    const repoFilter = get("REPO_FILTER").required().asString();
+    const repoName = get("REPO_NAME").required().asString();
+    const principal = new iam.WebIdentityPrincipal(
+      provider.openIdConnectProviderArn, {
+        StringLike: {
+          [`${TokenHost}:sub`]: [
+            `repo:${repoOwner}/${repoName}:${repoFilter}`,
+          ],
+        },
+      },
+    )
+    
+    const cdkRoles = cdkRoleProviderResource.getAtt('cdkRoles').toStringList();
+    const policyStatement = new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
       resources: cdkRoles,
       actions: [
@@ -111,23 +133,32 @@ export class Github extends cdk.Stack {
       ],
     });
     
+    const policy = new iam.PolicyDocument({
+      statements: [
+        policyStatement,
+      ],
+    });
+    
     /**
      * IAM Role
      */
     const role = new iam.Role(
-      this, 'Github-DeployRole', {
-        maxSessionDuration: cdk.Duration.hours(1),
+      this, 'GithubDeployer', {
         roleName: 'github-deployer',
-        assumedBy: webPrincipal,
+        maxSessionDuration: cdk.Duration.hours(1),
+        assumedBy: principal,
         inlinePolicies: {
-          CDKDeploy: new iam.PolicyDocument({
-            statements: [
-              webPrincipalPolicy,
-            ],
-          }),
+          CDKDeploy: policy
         },
       },
     );
+    
+    new cdk.CfnOutput(this, 'RoleName', { value: role.roleName })
+    new cdk.CfnOutput(
+      this, 'RoleArn', {
+        value: role.roleArn,
+      }
+    )
   }
   
   /**
