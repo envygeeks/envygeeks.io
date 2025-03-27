@@ -4,7 +4,14 @@ const iam = new IAMClient({
 });
 
 export async function handler(event) {
-  console.log(event);
+    if (event.RequestType === 'Delete') {
+    return {
+      Data: {
+        cdkRoles: []
+      }
+    }
+  }
+
   const rolesResponse = await iam.send(
     new ListRolesCommand({
       // Empty
