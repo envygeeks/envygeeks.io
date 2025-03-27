@@ -1,73 +1,21 @@
-import {
-  AssetHashType,
-  CfnOutput,
-  DockerImage,
-  Duration,
-  Fn,
-  RemovalPolicy,
-  Size,
-  Stack,
-  type StackProps,
-} from 'aws-cdk-lib';
-import {
-  AccessLogFormat,
-  LambdaIntegration,
-  LogGroupLogDestination,
-  MethodLoggingLevel,
-  RestApi,
-  TokenAuthorizer,
-} from 'aws-cdk-lib/aws-apigateway';
-import { EndpointType } from 'aws-cdk-lib/aws-apigatewayv2';
-import {
-  AccessLevel,
-  AllowedMethods,
-  type BehaviorOptions,
-  CachedMethods,
-  CachePolicy,
-  Distribution,
-  Function as CfFunction,
-  FunctionCode,
-  FunctionEventType,
-  HeadersFrameOption,
-  HeadersReferrerPolicy,
-  HttpVersion,
-  OriginRequestCookieBehavior,
-  OriginRequestHeaderBehavior,
-  OriginRequestPolicy,
-  OriginRequestQueryStringBehavior,
-  ResponseHeadersPolicy,
-  ViewerProtocolPolicy,
-} from 'aws-cdk-lib/aws-cloudfront';
-import { HttpOrigin, S3BucketOrigin } from 'aws-cdk-lib/aws-cloudfront-origins';
-import { CfnAccessKey, PolicyStatement, User } from 'aws-cdk-lib/aws-iam';
-import {
-  Code,
-  Function,
-  LayerVersion,
-  Runtime,
-  Tracing,
-} from 'aws-cdk-lib/aws-lambda';
-import { LogGroup } from 'aws-cdk-lib/aws-logs';
-import {
-  BlockPublicAccess,
-  Bucket,
-  BucketAccessControl,
-  BucketEncryption,
-  ObjectOwnership,
-} from 'aws-cdk-lib/aws-s3';
-import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
-import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
-import {
-  AwsCustomResource,
-  AwsCustomResourcePolicy,
-  PhysicalResourceId,
-} from 'aws-cdk-lib/custom-resources';
-import type { Construct } from 'constructs';
-import { get } from 'env-var';
-import { execSync } from 'node:child_process';
 import * as fs from 'node:fs';
-import * as path from 'node:path';
+import * as cdk from 'aws-cdk-lib';
+import type { Construct } from 'constructs';
+import { execSync } from 'node:child_process';
+import * as cf from 'aws-cdk-lib/aws-cloudfront';
+import * as agw from 'aws-cdk-lib/aws-apigateway';
+import * as agw2 from 'aws-cdk-lib/aws-apigatewayv2';
+import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
+import * as s3Deployment from 'aws-cdk-lib/aws-s3-deployment';
+import * as scm from 'aws-cdk-lib/aws-secretsmanager';
+import * as cr from 'aws-cdk-lib/custom-resources';
+import * as lambda  from 'aws-cdk-lib/aws-lambda';
+import { LogGroup } from 'aws-cdk-lib/aws-logs';
+import * as iam from 'aws-cdk-lib/aws-iam';
+import * as s3 from 'aws-cdk-lib/aws-s3';
 import type { Stage } from './stage';
+import * as path from 'node:path';
+import { get } from 'env-var';
 
 /**
  * Cost Estimate (per month) for the Entire
@@ -91,10 +39,10 @@ import type { Stage } from './stage';
  * Note: Actual costs vary by region, usage,
  * and AWS pricing updates.
  */
-export class Nuxt extends Stack {
+export class Nuxt extends cdk.Stack {
   constructor (
     scope: Construct,
-    id: string, props?: StackProps
+    id: string, props?: cdk.StackProps
   ) {
     super(scope, id, props);
     const self = this;
@@ -112,38 +60,74 @@ export class Nuxt extends Stack {
     /**
      * Logs
      */
-    const logs = new Bucket(this, 'Logs', {
-      blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
-      accessControl: BucketAccessControl.BUCKET_OWNER_FULL_CONTROL,
-      objectOwnership: ObjectOwnership.OBJECT_WRITER,
-      encryption: BucketEncryption.S3_MANAGED,
-      removalPolicy: RemovalPolicy.RETAIN,
+    const logs = new s3.Bucket(this, 'Logs', {
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      accessControl: s3.BucketAccessControl.BUCKET_OWNER_FULL_CONTROL,
+      objectOwnership: s3.ObjectOwnership.OBJECT_WRITER,
+      encryption: s3.BucketEncryption.S3_MANAGED,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
       autoDeleteObjects: false,
     });
+    
+    new cdk.CfnOutput(
+      this, 'LogsName', {
+        value: logs.bucketName,
+      }
+    )
+    
+    new cdk.CfnOutput(
+      this, 'LogsArn', {
+        value: logs.bucketArn,
+      }
+    )
     
     /**
      * Static
      */
-    const _static = new Bucket(
+    const _static = new s3.Bucket(
       this, 'Static', {
-        blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
-        objectOwnership: ObjectOwnership.BUCKET_OWNER_PREFERRED,
-        removalPolicy: RemovalPolicy.RETAIN,
+        blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+        objectOwnership: s3.ObjectOwnership.BUCKET_OWNER_PREFERRED,
+        removalPolicy: cdk.RemovalPolicy.RETAIN,
         autoDeleteObjects: false,
       },
     );
     
+    new cdk.CfnOutput(
+      this, 'StaticName', {
+        value: _static.bucketName,
+      }
+    )
+    
+    new cdk.CfnOutput(
+      this, 'StaticArn', {
+        value: _static.bucketArn,
+      }
+    )
+    
     /**
      * Content
      */
-    const content = new Bucket(
+    const content = new s3.Bucket(
       this, 'Content', {
-        blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
-        objectOwnership: ObjectOwnership.BUCKET_OWNER_PREFERRED,
-        removalPolicy: RemovalPolicy.RETAIN,
+        blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+        objectOwnership: s3.ObjectOwnership.BUCKET_OWNER_PREFERRED,
+        removalPolicy: cdk.RemovalPolicy.RETAIN,
         autoDeleteObjects: false,
       },
     );
+    
+    new cdk.CfnOutput(
+      this, 'ContentName', {
+        value: content.bucketName,
+      }
+    )
+    
+    new cdk.CfnOutput(
+      this, 'ContentArn', {
+        value: content.bucketArn,
+      }
+    )
     
     /**
      * Proxy Logs
@@ -152,25 +136,30 @@ export class Nuxt extends Stack {
      */
     const gatewayLogGroup = new LogGroup(
       this, 'GatewayLogs', {
-        removalPolicy: RemovalPolicy.DESTROY,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
       },
     );
+    
+    new cdk.CfnOutput(
+      this, 'GatewayLogGroupName', {
+        value: gatewayLogGroup.logGroupName,
+      }
+    )
     
     /**
      * SSR
      */
     const imgName = 'public.ecr.aws/sam/build-nodejs18.x';
-    const backupImg = DockerImage.fromRegistry(
+    const backupImg = cdk.DockerImage.fromRegistry(
       imgName,
     );
     
     /**
      * Main Lambda layer
      */
-    const ssrCode = Code.fromAsset(
+    const ssrCode = lambda.Code.fromAsset(
       this.root, {
-        assetHashType: AssetHashType.CUSTOM,
-        assetHash: this.assetHash,
+        assetHashType: cdk.AssetHashType.SOURCE,
         exclude: ['node_modules'],
         bundling: {
           image: backupImg,
@@ -207,10 +196,9 @@ export class Nuxt extends Stack {
      * This way we can try to optimize
      * our Lambda!
      */
-    const ssrDepsCode = Code.fromAsset(
+    const ssrDepsCode = lambda.Code.fromAsset(
       this.root, {
-        assetHashType: AssetHashType.CUSTOM,
-        assetHash: this.assetHash,
+        assetHashType: cdk.AssetHashType.SOURCE,
         bundling: {
           image: backupImg,
           local: {
@@ -227,11 +215,19 @@ export class Nuxt extends Stack {
                   self.root, 'app/.dep/server/node_modules'
                 );
 
+                const destModules = path.join(
+                  dest, 'node_modules'
+                );
+                
                 execSync(`${_var} pnpm --filter=app cleanup`, io);
                 execSync(`${_var} pnpm --filter=app build:${stage.env}`, io);
-                fs.cpSync(path.join(nodeModules), dest, {
-                  recursive: true,
-                });
+                fs.mkdirSync(destModules)
+                fs.cpSync(
+                  path.join(nodeModules),
+                  destModules, {
+                    recursive: true,
+                  }
+                );
                 
                 return true;
               }
@@ -245,19 +241,22 @@ export class Nuxt extends Stack {
       },
     );
     
-    const ssrDeps = new LayerVersion(
-      this, 'SsrDeps', {
-        compatibleRuntimes: [Runtime.NODEJS_18_X],
+    const ssrDeps = new lambda.LayerVersion(
+      this, 'SsrDepsLayer', {
         code: ssrDepsCode,
+        compatibleRuntimes: [
+          lambda.Runtime.NODEJS_18_X
+        ],
       },
     );
     
-    const ssr = new Function(
+    const ssr = new lambda.Function(
       this, 'Ssr', {
         handler: 'index.handler',
-        runtime: Runtime.NODEJS_18_X,
-        timeout: Duration.seconds(10),
-        tracing: Tracing.ACTIVE,
+        runtime: lambda.Runtime.NODEJS_18_X,
+        architecture: lambda.Architecture.ARM_64,
+        timeout: cdk.Duration.seconds(10),
+        tracing: lambda.Tracing.ACTIVE,
         layers: [ssrDeps],
         memorySize: 1024,
         code: ssrCode,
@@ -273,17 +272,29 @@ export class Nuxt extends Stack {
       ssr,
     );
     
+    new cdk.CfnOutput(
+      this, 'SsrFunctionName', {
+        value: ssr.functionName,
+      }
+    )
+    
+    new cdk.CfnOutput(
+      this, 'SsrFunctionArn', {
+        value: ssr.functionArn,
+      }
+    )
+    
     /**
      * Sync Static
      */
-    const deploy = new BucketDeployment(
+    const deploy = new s3Deployment.BucketDeployment(
       this, 'Sync', {
         destinationBucket: _static,
         memoryLimit: 1024,
         sources: [
-          Source.asset(path.join(
-            this.root, 'app/.output/public'
-          )),
+          s3Deployment.Source.asset(
+            path.join(this.root, 'app/.output/public')
+          ),
         ],
       },
     );
@@ -299,7 +310,7 @@ export class Nuxt extends Stack {
      * to authorize the request, this helps
      * prevent direct Gateway access
      */
-    const ssrToken = new Secret(this, 'SsrToken', {
+    const ssrToken = new scm.Secret(this, 'SsrToken', {
       generateSecretString: {
         excludePunctuation: true,
         generateStringKey: 'value',
@@ -309,9 +320,15 @@ export class Nuxt extends Stack {
       },
     });
     
-    const ssrTokenResolver = Fn.join('', [
+    const ssrTokenResolver = cdk.Fn.join('', [
       '{{resolve:secretsmanager:', ssrToken.secretName, ':SecretString:value}}'
     ])
+    
+    new cdk.CfnOutput(
+      this, 'SsrTokenName', {
+        value: ssrToken.secretName,
+      }
+    )
     
     /**
      * SSR Authorizer
@@ -319,14 +336,14 @@ export class Nuxt extends Stack {
      * to verify that the header token matches
      * the stored token on our side
      */
-    const ssrAuthorizer = new Function(
+    const ssrAuthorizer = new lambda.Function(
       this, 'SsrAuthorizer', {
-        runtime: Runtime.NODEJS_18_X,
         handler: 'index.handler',
-        timeout: Duration.seconds(5),
-        tracing: Tracing.ACTIVE,
+        runtime: lambda.Runtime.NODEJS_18_X,
+        timeout: cdk.Duration.seconds(5),
+        tracing: lambda.Tracing.ACTIVE,
         memorySize: 128,
-        code: Code.fromAsset(
+        code: lambda.Code.fromAsset(
           path.join(
             this.cdkRoot, 'lambda/authorizer'
           )
@@ -342,14 +359,26 @@ export class Nuxt extends Stack {
       ssrAuthorizer,
     );
     
+    new cdk.CfnOutput(
+      this, 'SsrAuthorizerFunctionName', {
+        value: ssrAuthorizer.functionName,
+      }
+    )
+    
+    new cdk.CfnOutput(
+      this, 'SsrAuthorizerFunctionArn', {
+        value: ssrAuthorizer.functionArn,
+      }
+    )
+    
     /**
      * RestApi Authorizer
      * Used by RestApi to verify the
      * request with a token
      */
-    const restAuthorizer = new TokenAuthorizer(
+    const restAuthorizer = new agw.TokenAuthorizer(
       this, 'RestAuthorizer', {
-        resultsCacheTtl: Duration.minutes(1),
+        resultsCacheTtl: cdk.Duration.minutes(1),
         identitySource: 'method.request.header.x-origin-token',
         handler: ssrAuthorizer,
       },
@@ -358,7 +387,7 @@ export class Nuxt extends Stack {
     /**
      * RestApi Integration
      */
-    const restIntegration = new LambdaIntegration(
+    const restIntegration = new agw.LambdaIntegration(
       ssr,
     );
     
@@ -366,17 +395,17 @@ export class Nuxt extends Stack {
      * RestApi
      */
     const restApiStageName = 'prod';
-    const logGroupDestination = new LogGroupLogDestination(gatewayLogGroup);
-    const restApi = new RestApi(
+    const logGroupDestination = new agw.LogGroupLogDestination(gatewayLogGroup);
+    const restApi = new agw.RestApi(
       this, 'RestApi', {
-        endpointTypes: [EndpointType.REGIONAL],
-        minCompressionSize: Size.bytes(100),
+        minCompressionSize: cdk.Size.bytes(100),
+        endpointTypes: [agw2.EndpointType.REGIONAL],
         binaryMediaTypes: ['*/*'],
         deployOptions: {
           dataTraceEnabled: true,
-          accessLogFormat: AccessLogFormat.jsonWithStandardFields(),
+          accessLogFormat: agw.AccessLogFormat.jsonWithStandardFields(),
           accessLogDestination: logGroupDestination,
-          loggingLevel: MethodLoggingLevel.INFO,
+          loggingLevel: agw.MethodLoggingLevel.INFO,
           stageName: restApiStageName,
           tracingEnabled: true,
         },
@@ -393,14 +422,20 @@ export class Nuxt extends Stack {
       'ANY', restIntegration,
     );
     
+    new cdk.CfnOutput(
+      this, 'RestApiId', {
+        value: restApi.restApiId,
+      }
+    )
+    
     /**
      * Cdn
      */
     const gatewayId = restApi.restApiId;
     const gatewayHostname = `${gatewayId}.execute-api.${this.region}.amazonaws.com`;
-    const stripAssetsFunc = new CfFunction(
+    const stripAssetsFunc = new cf.Function(
       this, 'RewriteAssetsFunction', {
-        code: FunctionCode.fromInline(`
+        code: cf.FunctionCode.fromInline(`
           function handler(event) {
             var request = event.request;
             if (request.uri.startsWith("/assets/")) {
@@ -412,21 +447,33 @@ export class Nuxt extends Stack {
         `),
       },
     );
+    
+    new cdk.CfnOutput(
+      this, 'StripAssetsFunctionName', {
+        value: stripAssetsFunc.functionName,
+      }
+    )
+    
+    new cdk.CfnOutput(
+      this, 'StripAssetsFunctionArn', {
+        value: stripAssetsFunc.functionArn,
+      }
+    )
 
     /**
      * Origins
      */
-    const imgOrigin = new HttpOrigin(imgixOrigin!);
-    const gifOrigin = new HttpOrigin(imgixOrigin!);
-    const staticOrigin = S3BucketOrigin.withOriginAccessControl(
+    const imgOrigin = new origins.HttpOrigin(imgixOrigin!);
+    const gifOrigin = new origins.HttpOrigin(imgixOrigin!);
+    const staticOrigin = origins.S3BucketOrigin.withOriginAccessControl(
       _static, {
         originAccessLevels: [
-          AccessLevel.READ,
+          cf.AccessLevel.READ,
         ],
       },
     );
     
-    const ssrOrigin = new HttpOrigin(
+    const ssrOrigin = new origins.HttpOrigin(
       gatewayHostname, {
         originPath: `/${restApiStageName}`,
         customHeaders: {
@@ -439,103 +486,139 @@ export class Nuxt extends Stack {
      * assets/*
      * Cf Cache
      */
-    const imgCache = new CachePolicy(
+    const imgCache = new cf.CachePolicy(
       this, 'ImgCache', {
-        maxTtl: Duration.days(365),
-        cookieBehavior: OriginRequestCookieBehavior.none(),
-        defaultTtl: Duration.days(1), minTtl: Duration.seconds(0),
-        queryStringBehavior: OriginRequestQueryStringBehavior.all(),
-        headerBehavior: OriginRequestHeaderBehavior.allowList(
+        maxTtl: cdk.Duration.days(365),
+        cookieBehavior: cf.OriginRequestCookieBehavior.none(),
+        defaultTtl: cdk.Duration.days(1), minTtl: cdk.Duration.seconds(0),
+        queryStringBehavior: cf.OriginRequestQueryStringBehavior.all(),
+        headerBehavior: cf.OriginRequestHeaderBehavior.allowList(
           'Accept', 'Accept-Language', 'User-Agent',
         ),
       },
     );
     
+    new cdk.CfnOutput(
+      this, 'ImgCacheId', {
+        value: imgCache.cachePolicyId,
+      }
+    )
+    
     /**
      * assets/*.gif
      * Cf Cache
      */
-    const gifCache = new CachePolicy(
+    const gifCache = new cf.CachePolicy(
       this, 'GifCache', {
-        maxTtl: Duration.days(365),
-        cookieBehavior: OriginRequestCookieBehavior.none(),
-        defaultTtl: Duration.days(1), minTtl: Duration.seconds(0),
-        queryStringBehavior: OriginRequestQueryStringBehavior.none(),
-        headerBehavior: OriginRequestHeaderBehavior.allowList(
+        maxTtl: cdk.Duration.days(365),
+        cookieBehavior: cf.OriginRequestCookieBehavior.none(),
+        defaultTtl: cdk.Duration.days(1), minTtl: cdk.Duration.seconds(0),
+        queryStringBehavior: cf.OriginRequestQueryStringBehavior.none(),
+        headerBehavior: cf.OriginRequestHeaderBehavior.allowList(
           'Accept', 'Accept-Language', 'User-Agent',
         ),
       },
     );
+    
+    new cdk.CfnOutput(
+      this, 'GifCacheId', {
+        value: gifCache.cachePolicyId,
+      }
+    )
     
     /**
      * _nuxt/*
      * Cf Cache
      */
-    const staticCache = new CachePolicy(
+    const staticCache = new cf.CachePolicy(
       this, 'StaticCache', {
-        maxTtl: Duration.days(365),
+        maxTtl: cdk.Duration.days(365),
         enableAcceptEncodingGzip: true,
         enableAcceptEncodingBrotli: true,
-        cookieBehavior: OriginRequestCookieBehavior.none(),
-        defaultTtl: Duration.days(1), minTtl: Duration.seconds(0),
-        queryStringBehavior: OriginRequestQueryStringBehavior.none(),
-        headerBehavior: OriginRequestHeaderBehavior.allowList(
+        cookieBehavior: cf.OriginRequestCookieBehavior.none(),
+        defaultTtl: cdk.Duration.days(1), minTtl: cdk.Duration.seconds(0),
+        queryStringBehavior: cf.OriginRequestQueryStringBehavior.none(),
+        headerBehavior: cf.OriginRequestHeaderBehavior.allowList(
           'Accept', 'Accept-Language', 'User-Agent',
         ),
       },
     );
     
+    new cdk.CfnOutput(
+      this, 'StaticCacheId', {
+        value: staticCache.cachePolicyId,
+      }
+    )
+    
     /**
      * Root
      * Cf Cache
      */
-    const ssrCache = new CachePolicy(
+    const ssrCache = new cf.CachePolicy(
       this, 'SsrCache', {
         enableAcceptEncodingBrotli: true,
-        cookieBehavior: OriginRequestCookieBehavior.none(),
-        defaultTtl: Duration.days(1), minTtl: Duration.seconds(0),
-        queryStringBehavior: OriginRequestQueryStringBehavior.none(),
-        headerBehavior: OriginRequestHeaderBehavior.none(),
+        cookieBehavior: cf.OriginRequestCookieBehavior.none(),
+        defaultTtl: cdk.Duration.days(1), minTtl: cdk.Duration.seconds(0),
+        queryStringBehavior: cf.OriginRequestQueryStringBehavior.none(),
+        headerBehavior: cf.OriginRequestHeaderBehavior.none(),
         enableAcceptEncodingGzip: true,
-        maxTtl: Duration.days(365),
+        maxTtl: cdk.Duration.days(365),
       },
     );
+    
+    new cdk.CfnOutput(
+      this, 'SsrCacheId', {
+        value: ssrCache.cachePolicyId,
+      }
+    )
     
     /**
      * Origin Requests
      * These policies control what parts
      * of the client’s request (such as cookies,
-     * query strings, and headers) are forwarded from
+     * query strings, and headers) are sent from
      * CloudFront to your origin.
      * assets/*
      */
-    const imgRequest = new OriginRequestPolicy(
+    const imgRequest = new cf.OriginRequestPolicy(
       this, 'ImgRequest', {
-        cookieBehavior: OriginRequestCookieBehavior.none(),
-        queryStringBehavior: OriginRequestQueryStringBehavior.all(),
-        headerBehavior: OriginRequestHeaderBehavior.none(),
+        cookieBehavior: cf.OriginRequestCookieBehavior.none(),
+        queryStringBehavior: cf.OriginRequestQueryStringBehavior.all(),
+        headerBehavior: cf.OriginRequestHeaderBehavior.none(),
       },
     );
+    
+    new cdk.CfnOutput(
+      this, 'ImgRequestId', {
+        value: imgRequest.originRequestPolicyId,
+      }
+    )
     
     /**
      * assets/*.gif
      */
-    const gifRequest = new OriginRequestPolicy(
+    const gifRequest = new cf.OriginRequestPolicy(
       this, 'GifRequest', {
-        cookieBehavior: OriginRequestCookieBehavior.none(),
-        queryStringBehavior: OriginRequestQueryStringBehavior.none(),
-        headerBehavior: OriginRequestHeaderBehavior.none(),
+        cookieBehavior: cf.OriginRequestCookieBehavior.none(),
+        queryStringBehavior: cf.OriginRequestQueryStringBehavior.none(),
+        headerBehavior: cf.OriginRequestHeaderBehavior.none(),
       },
     );
+    
+    new cdk.CfnOutput(
+      this, 'GifRequestId', {
+        value: gifRequest.originRequestPolicyId,
+      }
+    )
     
     /**
      * Root
      */
-    const ssrRequest = new OriginRequestPolicy(
+    const ssrRequest = new cf.OriginRequestPolicy(
       this, 'SsrRequest', {
-        cookieBehavior: OriginRequestCookieBehavior.all(),
-        queryStringBehavior: OriginRequestQueryStringBehavior.all(),
-        headerBehavior: OriginRequestHeaderBehavior.allowList(
+        cookieBehavior: cf.OriginRequestCookieBehavior.all(),
+        queryStringBehavior: cf.OriginRequestQueryStringBehavior.all(),
+        headerBehavior: cf.OriginRequestHeaderBehavior.allowList(
           'Accept',
           'Accept-Language',
           'CloudFront-Forwarded-Proto',
@@ -546,24 +629,36 @@ export class Nuxt extends Stack {
       },
     );
     
+    new cdk.CfnOutput(
+      this, 'SsrRequestId', {
+        value: ssrRequest.originRequestPolicyId,
+      }
+    )
+    
     /**
      * _nuxt/*
      */
-    const staticRequest = new OriginRequestPolicy(
+    const staticRequest = new cf.OriginRequestPolicy(
       this, 'StaticRequest', {
-        cookieBehavior: OriginRequestCookieBehavior.none(),
-        queryStringBehavior: OriginRequestQueryStringBehavior.none(),
-        headerBehavior: OriginRequestHeaderBehavior.none(),
+        cookieBehavior: cf.OriginRequestCookieBehavior.none(),
+        queryStringBehavior: cf.OriginRequestQueryStringBehavior.none(),
+        headerBehavior: cf.OriginRequestHeaderBehavior.none(),
       },
     );
     
+    new cdk.CfnOutput(
+      this, 'StaticRequestId', {
+        value: staticRequest.originRequestPolicyId,
+      }
+    )
+    
     // Shared Policy Identifiers
-    const frameOption = HeadersFrameOption.SAMEORIGIN;
-    const accessControlMaxAge = Duration.seconds(31536000);
-    const referrerPolicy = HeadersReferrerPolicy
+    const frameOption = cf.HeadersFrameOption.SAMEORIGIN;
+    const accessControlMaxAge = cdk.Duration.seconds(31536000);
+    const referrerPolicy = cf.HeadersReferrerPolicy
       .STRICT_ORIGIN_WHEN_CROSS_ORIGIN;
     
-    const imgResponse = new ResponseHeadersPolicy(
+    const imgResponse = new cf.ResponseHeadersPolicy(
       this, 'ImgResponse', {
         corsBehavior: {
           originOverride: false,
@@ -606,7 +701,13 @@ export class Nuxt extends Stack {
       },
     );
     
-    const gifResponse = new ResponseHeadersPolicy(
+    new cdk.CfnOutput(
+      this, 'ImgResponseId', {
+        value: imgResponse.responseHeadersPolicyId,
+      }
+    )
+    
+    const gifResponse = new cf.ResponseHeadersPolicy(
       this, 'GifResponse', {
         corsBehavior: {
           originOverride: false,
@@ -649,7 +750,13 @@ export class Nuxt extends Stack {
       },
     );
     
-    const staticResponse = new ResponseHeadersPolicy(
+    new cdk.CfnOutput(
+      this, 'GifResponseId', {
+        value: gifResponse.responseHeadersPolicyId,
+      }
+    )
+    
+    const staticResponse = new cf.ResponseHeadersPolicy(
       this, 'StaticResponse', {
         corsBehavior: {
           originOverride: false,
@@ -692,10 +799,16 @@ export class Nuxt extends Stack {
       },
     );
     
+    new cdk.CfnOutput(
+      this, 'StaticResponseId', {
+        value: staticResponse.responseHeadersPolicyId,
+      }
+    )
+    
     /**
      * Root
      */
-    const ssrResponse = new ResponseHeadersPolicy(
+    const ssrResponse = new cf.ResponseHeadersPolicy(
       this, 'SsrResponse', {
         corsBehavior: {
           originOverride: false,
@@ -722,7 +835,7 @@ export class Nuxt extends Stack {
           xssProtection: { modeBlock: true, protection: true, override: true },
           contentTypeOptions: { override: true },
           strictTransportSecurity: {
-            accessControlMaxAge: Duration.seconds(31536000),
+            accessControlMaxAge: cdk.Duration.seconds(31536000),
             override: true,
           },
         },
@@ -738,6 +851,12 @@ export class Nuxt extends Stack {
       },
     );
     
+    new cdk.CfnOutput(
+      this, 'SsrResponseId', {
+        value: ssrResponse.responseHeadersPolicyId,
+      }
+    )
+    
     /**
      * Requests to Cf
      * These policies determine what
@@ -745,17 +864,17 @@ export class Nuxt extends Stack {
      * from CloudFront to your origin.
      * assets/*
      */
-    const imgBehavior: BehaviorOptions = {
+    const imgBehavior: cf.BehaviorOptions = {
       responseHeadersPolicy: imgResponse,
-      allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
-      viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      allowedMethods: cf.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+      viewerProtocolPolicy: cf.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       originRequestPolicy: imgRequest,
       cachePolicy: imgCache,
       origin: imgOrigin,
       compress: true,
       functionAssociations: [
         {
-          eventType: FunctionEventType.VIEWER_REQUEST,
+          eventType: cf.FunctionEventType.VIEWER_REQUEST,
           function: stripAssetsFunc,
         },
       ],
@@ -764,17 +883,17 @@ export class Nuxt extends Stack {
     /**
      * assets/*.gif
      */
-    const gifBehavior: BehaviorOptions = {
+    const gifBehavior: cf.BehaviorOptions = {
       responseHeadersPolicy: gifResponse,
-      allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
-      viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      allowedMethods: cf.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+      viewerProtocolPolicy: cf.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       originRequestPolicy: gifRequest,
       cachePolicy: gifCache,
       origin: gifOrigin,
       compress: true,
       functionAssociations: [
         {
-          eventType: FunctionEventType.VIEWER_REQUEST,
+          eventType: cf.FunctionEventType.VIEWER_REQUEST,
           function: stripAssetsFunc,
         },
       ],
@@ -783,11 +902,11 @@ export class Nuxt extends Stack {
     /**
      * _nuxt/*
      */
-    const staticBehavior: BehaviorOptions = {
+    const staticBehavior: cf.BehaviorOptions = {
       responseHeadersPolicy: staticResponse,
-      cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
-      allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
-      viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      cachedMethods: cf.CachedMethods.CACHE_GET_HEAD_OPTIONS,
+      allowedMethods: cf.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+      viewerProtocolPolicy: cf.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       originRequestPolicy: staticRequest,
       cachePolicy: staticCache,
       origin: staticOrigin,
@@ -797,11 +916,11 @@ export class Nuxt extends Stack {
     /**
      * Root
      */
-    const ssrBehavior: BehaviorOptions = {
+    const ssrBehavior: cf.BehaviorOptions = {
       responseHeadersPolicy: ssrResponse,
-      cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
-      allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
-      viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      cachedMethods: cf.CachedMethods.CACHE_GET_HEAD_OPTIONS,
+      allowedMethods: cf.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+      viewerProtocolPolicy: cf.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       originRequestPolicy: ssrRequest,
       cachePolicy: ssrCache,
       origin: ssrOrigin,
@@ -811,12 +930,12 @@ export class Nuxt extends Stack {
     /**
      * CDN
      */
-    const cdn = new Distribution(
+    const cdn = new cf.Distribution(
       this, 'Cdn', {
         logBucket: logs,
         enableLogging: true,
         logFilePrefix: 'cdn/',
-        httpVersion: HttpVersion.HTTP2_AND_3,
+        httpVersion: cf.HttpVersion.HTTP2_AND_3,
         defaultBehavior: ssrBehavior,
         additionalBehaviors: {
           '/fonts/*': staticBehavior,
@@ -832,13 +951,31 @@ export class Nuxt extends Stack {
       },
     );
     
+    new cdk.CfnOutput(
+      this, 'CdnDomainName', {
+        value: cdn.domainName,
+      }
+    )
+    
+    new cdk.CfnOutput(
+      this, 'CdnDistributionId', {
+        value: cdn.distributionId,
+      }
+    )
+    
+    new cdk.CfnOutput(
+      this, 'CdnDistributionArn', {
+        value: cdn.distributionArn,
+      }
+    )
+    
     /**
      * Invalidate
      */
     const date = Date.now();
     const distroId = cdn.distributionId;
-    const physicalId = PhysicalResourceId.of(`${distroId}-${date}`);
-    const invalidator = new AwsCustomResource(
+    const physicalId = cr.PhysicalResourceId.of(`${distroId}-${date}`);
+    const invalidator = new cr.AwsCustomResource(
       this, `CloudFrontInvalidation-${date}`, {
         onCreate: {
           action: 'createInvalidation',
@@ -857,8 +994,8 @@ export class Nuxt extends Stack {
             },
           },
         },
-        policy: AwsCustomResourcePolicy.fromSdkCalls({
-          resources: AwsCustomResourcePolicy.ANY_RESOURCE,
+        policy: cr.AwsCustomResourcePolicy.fromSdkCalls({
+          resources: cr.AwsCustomResourcePolicy.ANY_RESOURCE,
         }),
       },
     );
@@ -870,9 +1007,32 @@ export class Nuxt extends Stack {
     /**
      * Imgix
      */
-    const imgixUser = new User(this, 'ImgixUser', { userName: 'imgix' });
+    const imgixUser = new iam.User(
+      this, 'ImgixUser', {
+        userName: 'imgix'
+      }
+    );
+    
+    new cdk.CfnOutput(
+      this, 'ImgixUserName', {
+        value: imgixUser.userName,
+      }
+    )
+    
+    new cdk.CfnOutput(
+      this, 'ImgixUserArn', {
+        value: imgixUser.userArn,
+      }
+    )
+    
+    /**
+     * Scope out Imgix user permissions
+     *   even though we have little risk
+     *   for assets that are technically
+     *   public!
+     */
     imgixUser.addToPolicy(
-      new PolicyStatement({
+      new iam.PolicyStatement({
         resources: [_static.bucketArn],
         actions: [
           's3:ListBucket',
@@ -882,7 +1042,7 @@ export class Nuxt extends Stack {
     );
     
     imgixUser.addToPolicy(
-      new PolicyStatement({
+      new iam.PolicyStatement({
         actions: ['s3:GetObject'],
         resources: [
           `${_static.bucketArn}/assets/*`,
@@ -890,30 +1050,29 @@ export class Nuxt extends Stack {
       }),
     );
     
-    const accessKey = new CfnAccessKey(
+    /**
+     * SECURITY RISK: low
+     * It still uses regular
+     *   access keys, please note
+     *   that we scope it above!
+     */
+    const accessKey = new iam.CfnAccessKey(
       this, 'ImgixAccessKey', {
         userName: imgixUser.userName,
       },
     );
     
-    new CfnOutput(this, 'ContentArn', { value: content.bucketArn });
-    new CfnOutput(this, 'SsrLambdaArn', { value: ssr.functionArn });
-    new CfnOutput(this, 'SsrLambdaName', { value: ssr.functionName });
-    new CfnOutput(this, 'SsrTokenSecretArn', { value: ssrToken.secretArn });
-    new CfnOutput(this, 'SsrTokenSecretName', { value: ssrToken.secretName });
-    new CfnOutput(this, 'CloudFrontDomainName', { value: cdn.distributionDomainName });
-    new CfnOutput(this, 'ImgixSecretAccessKey', { value: accessKey.attrSecretAccessKey });
-    new CfnOutput(this, 'StaticBucketDomain', { value: _static.bucketWebsiteDomainName });
-    new CfnOutput(this, 'CloudFrontDistributionId', { value: cdn.distributionId });
-    new CfnOutput(this, 'StaticBucketName', { value: _static.bucketName });
-    new CfnOutput(this, 'StaticBucketArn', { value: _static.bucketArn });
-    new CfnOutput(this, 'LogsBucketName', { value: logs.bucketName });
-    new CfnOutput(this, 'LogsBucketArn', { value: logs.bucketArn });
-    new CfnOutput(this, 'RestApiId', { value: restApi.restApiId });
-    new CfnOutput(this, 'RestApiRootUrl', { value: restApi.url });
-    new CfnOutput(this, 'ImgixAccessKeyId', {
-      value: accessKey.ref,
-    });
+    new cdk.CfnOutput(
+      this, 'ImgixSecretAccessKey', {
+        value: accessKey.attrSecretAccessKey
+      }
+    );
+    
+    new cdk.CfnOutput(
+      this, 'ImgixAccessKeyId', {
+        value: accessKey.ref,
+      }
+    );
   }
   
   /**
@@ -946,7 +1105,7 @@ export class Nuxt extends Stack {
    */
   private get assetHash(): string {
     return execSync(
-      `git ls-files -s nuxt | git hash-object --stdin`, {
+      `git ls-files -s app | git hash-object --stdin`, {
         encoding: 'utf8', cwd: this.root,
       }
     ).trim();
