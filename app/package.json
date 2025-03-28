@@ -28,7 +28,7 @@
     "@nuxtjs/html-minifier": "^0.1.2",
     "@nuxtjs/robots": "^5.2.2",
     "@nuxtjs/seo": "^2.1.0",
-    "@nuxtjs/tailwindcss": "^6.13.1",
+    "@nuxtjs/tailwindcss": "^6.13.2",
     "@tailwindcss/vite": "^4.0.0",
     "@types/culori": "^2.1.1",
     "@vue/test-utils": "^2.4.6",
