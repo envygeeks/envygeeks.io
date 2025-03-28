@@ -1,19 +1,25 @@
 import * as cdk from "aws-cdk-lib";
+import * as stack from '../lib/stack';
 import * as iam from "aws-cdk-lib/aws-iam";
-import * as cr from 'aws-cdk-lib/custom-resources';
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as cr from 'aws-cdk-lib/custom-resources';
 import type { Construct } from 'constructs';
-import { NagSuppressions } from "cdk-nag";
 import * as path from 'node:path';
+import * as nag from "cdk-nag";
 import { get } from 'env-var';
 
 const TokenHost: string = "token.actions.githubusercontent.com" as const
 const ThumbprintHash: string = "6938fd4d98bab03faadb97b34396831e3780aea1" as const
 const Principal: string = "sts.amazonaws.com" as const
 
-export class Github extends cdk.Stack {
-  constructor (scope: Construct, id: string, props: cdk.StackProps) {
-    super(scope, id, props);
+export class Github extends stack.Stack {
+  constructor (
+    scope: Construct,
+    id: string, props: stack.StackProps
+  ) {
+    super(
+      scope, id, props
+    );
     
     /**
      * OIDC Provider
@@ -76,7 +82,7 @@ export class Github extends cdk.Stack {
     );
     
     // TODO: Last checked 03/24/2025
-    NagSuppressions.addResourceSuppressions(
+    nag.NagSuppressions.addResourceSuppressions(
       cdkRoleFinder, [
         { id: 'AwsSolutions-IAM4', reason: 'CloudWatch logging' },
         { id: 'AwsSolutions-IAM5', reason: 'Needed for IAM Role Discovery' },
@@ -91,7 +97,7 @@ export class Github extends cdk.Stack {
     );
     
     // TODO: Last checked 03/24/2025
-    NagSuppressions.addResourceSuppressions(
+    nag.NagSuppressions.addResourceSuppressions(
       cdkRoleProvider, [
         { id: 'AwsSolutions-IAM5', reason: 'Managed by CDK' },
         { id: 'AwsSolutions-IAM4', reason: 'CloudWatch logging' },
@@ -153,22 +159,16 @@ export class Github extends cdk.Stack {
       },
     );
     
-    new cdk.CfnOutput(this, 'RoleName', { value: role.roleName })
+    new cdk.CfnOutput(
+      this, 'RoleName', {
+        value: role.roleName
+      }
+    )
+    
     new cdk.CfnOutput(
       this, 'RoleArn', {
         value: role.roleArn,
       }
     )
-  }
-  
-  /**
-   * Resolves and returns
-   * the root directory path for
-   * the CDK app
-   */
-  private get cdkRoot() {
-    return path.join(
-      __dirname, '..'
-    );
   }
 }

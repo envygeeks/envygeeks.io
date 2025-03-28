@@ -1,21 +1,25 @@
-import { Github } from './lib/github';
-import { Roles } from './lib/roles';
-import { Dev } from './lib/stages/dev';
-import { Prod } from './lib/stages/prod';
-import { HostedZone } from './lib/hosted-zone';
-import { AwsSolutionsChecks } from 'cdk-nag';
-import { Aspects, Aws } from 'aws-cdk-lib';
+import { get } from 'env-var';
+import * as nag from 'cdk-nag';
 import * as cdk from 'aws-cdk-lib';
+import * as config from './lib/config';
+import { Github } from './stacks/github';
+import { HostedZone } from './stacks/hosted-zone';
+import { Roles } from './stacks/roles';
+import { Dev } from './stages/dev';
+import { Prod } from './stages/prod';
 
 const app = new cdk.App();
 const { CDK_DEFAULT_ACCOUNT: account, CDK_DEFAULT_REGION: region } = process.env
-let hostedZone: HostedZone|undefined = undefined;
-Aspects.of(app).add(
-  new AwsSolutionsChecks(),
+const appName: config.App = get('APP_NAME').required().asString();
+const envName = 'global';
+cdk.Aspects.of(app).add(
+  new nag.AwsSolutionsChecks(),
 );
 
-const roles = new Roles(
+new Roles(
   app, 'Roles', {
+    envName: 'global',
+    appName,
     env: {
       account, region
     }
@@ -23,27 +27,35 @@ const roles = new Roles(
 );
 new Github(
   app, 'Github', {
+    envName: 'global',
+    appName,
     env: {
       account, region
     }
   }
 );
-hostedZone = new HostedZone(
+const hostedZone = new HostedZone(
   app, 'HostedZone', {
+    envName: 'global',
+    appName,
     env: {
       account, region
     }
   }
 );
-new Dev(
+const dev = new Dev(
   app, 'Dev', {
+    envName: 'dev',
+    appName,
     env: {
       account, region
     }
   },
 );
-new Prod(
+const prod = new Prod(
   app, 'Prod', {
+    envName: 'prod',
+    appName,
     env: {
       account, region
     }

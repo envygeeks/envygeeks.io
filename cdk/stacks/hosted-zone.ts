@@ -1,8 +1,9 @@
 import { Construct } from 'constructs';
+import * as records from '../dns.json';
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as kms from 'aws-cdk-lib/aws-kms';
-import * as records from '../dns.json';
+import * as stack from '../lib/stack';
 import * as cdk from 'aws-cdk-lib';
 import { get } from 'env-var';
 
@@ -37,7 +38,7 @@ type TxtRecords = Record<
   string, string[]
 >;
 
-export class HostedZone extends cdk.Stack {
+export class HostedZone extends stack.Stack {
   public hostedZone: route53.PublicHostedZone
   
   /**
@@ -88,7 +89,7 @@ export class HostedZone extends cdk.Stack {
    */
   constructor (
     scope: Construct,
-    id: string, props?: cdk.StackProps
+    id: string, props?: stack.StackProps
   ) {
     super(scope, id, props);
     

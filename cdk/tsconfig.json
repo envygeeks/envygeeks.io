@@ -26,7 +26,7 @@
     ]
   },
   "include": [
-    "dns.json",
+    "./dns.json",
     "**/*.ts"
   ],
   "exclude": [

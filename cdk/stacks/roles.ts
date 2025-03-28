@@ -1,12 +1,16 @@
+import * as cdk from "aws-cdk-lib";
 import * as iam from "aws-cdk-lib/aws-iam";
 import type { Construct } from 'constructs';
-import { Stack, Aws, Duration } from "aws-cdk-lib";
-import * as cdk from "aws-cdk-lib";
-import * as path from 'node:path';
+import * as stack from '../lib/stack';
 
-export class Roles extends Stack {
-  constructor (scope: Construct, id: string, props?: any) {
-    super(scope, id, props);
+export class Roles extends stack.Stack {
+  constructor (
+    scope: Construct,
+    id: string, props?: stack.StackProps
+  ) {
+    super(
+      scope, id, props
+    );
     
     /**
      * AWS myApplications

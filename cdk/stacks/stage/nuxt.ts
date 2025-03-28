@@ -1,5 +1,6 @@
 import * as fs from 'node:fs';
 import * as cdk from 'aws-cdk-lib';
+import type { Buckets } from './buckets';
 import type { Construct } from 'constructs';
 import { execSync } from 'node:child_process';
 import * as cf from 'aws-cdk-lib/aws-cloudfront';
@@ -14,11 +15,16 @@ import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as cr from 'aws-cdk-lib/custom-resources';
 import * as lambda  from 'aws-cdk-lib/aws-lambda';
 import { LogGroup } from 'aws-cdk-lib/aws-logs';
-import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3 from 'aws-cdk-lib/aws-s3';
-import type { Stage } from './stage';
+import type { Stage } from '../../lib/stage';
+import * as stack from '../../lib/stack';
 import * as path from 'node:path';
 import { get } from 'env-var';
+
+export interface NuxtProps
+extends stack.StackProps {
+  buckets: Buckets,
+}
 
 /**
  * Cost Estimate (per month) for the Entire
@@ -42,10 +48,10 @@ import { get } from 'env-var';
  * Note: Actual costs vary by region, usage,
  * and AWS pricing updates.
  */
-export class Nuxt extends cdk.Stack {
+export class Nuxt extends stack.Stack {
   constructor (
     scope: Construct,
-    id: string, props?: cdk.StackProps
+    id: string, props: NuxtProps,
   ) {
     super(scope, id, props);
     const self = this;
@@ -53,84 +59,12 @@ export class Nuxt extends cdk.Stack {
       scope as Stage
     );
     
-    const imgixOrigin = get('IMGIX_ORIGIN').required().asString();
-    if (!imgixOrigin) {
-      throw new Error(
-        'imgixOrigin is required'
-      );
-    }
-    
-    /**
-     * Logs
-     */
-    const logs = new s3.Bucket(this, 'Logs', {
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-      accessControl: s3.BucketAccessControl.BUCKET_OWNER_FULL_CONTROL,
-      objectOwnership: s3.ObjectOwnership.OBJECT_WRITER,
-      encryption: s3.BucketEncryption.S3_MANAGED,
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
-      autoDeleteObjects: false,
-    });
-    
-    new cdk.CfnOutput(
-      this, 'LogsName', {
-        value: logs.bucketName,
+    const {
+      buckets: {
+        logsBucket,
+        staticBucket
       }
-    )
-    
-    new cdk.CfnOutput(
-      this, 'LogsArn', {
-        value: logs.bucketArn,
-      }
-    )
-    
-    /**
-     * Static
-     */
-    const _static = new s3.Bucket(
-      this, 'Static', {
-        blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-        objectOwnership: s3.ObjectOwnership.BUCKET_OWNER_PREFERRED,
-        removalPolicy: cdk.RemovalPolicy.RETAIN,
-        autoDeleteObjects: false,
-      },
-    );
-    
-    new cdk.CfnOutput(
-      this, 'StaticName', {
-        value: _static.bucketName,
-      }
-    )
-    
-    new cdk.CfnOutput(
-      this, 'StaticArn', {
-        value: _static.bucketArn,
-      }
-    )
-    
-    /**
-     * Content
-     */
-    const content = new s3.Bucket(
-      this, 'Content', {
-        blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-        objectOwnership: s3.ObjectOwnership.BUCKET_OWNER_PREFERRED,
-        removalPolicy: cdk.RemovalPolicy.RETAIN,
-        autoDeleteObjects: false,
-      },
-    );
-    
-    new cdk.CfnOutput(
-      this, 'ContentName', {
-        value: content.bucketName,
-      }
-    )
-    
-    new cdk.CfnOutput(
-      this, 'ContentArn', {
-        value: content.bucketArn,
-      }
-    )
+    } = props
     
     /**
      * Proxy Logs
@@ -265,13 +199,13 @@ export class Nuxt extends cdk.Stack {
         code: ssrCode,
         environment: {
           NODE_ENV: 'production',
-          IPX_DOMAIN: _static.bucketWebsiteDomainName,
+          IPX_DOMAIN: staticBucket.bucketWebsiteDomainName,
           ENVYGEEKS_ENV: stage.env,
           STAGE: stage.env,
         },
       },
     );
-    _static.grantRead(
+    staticBucket.grantRead(
       ssr,
     );
     
@@ -292,7 +226,7 @@ export class Nuxt extends cdk.Stack {
      */
     const deploy = new s3Deployment.BucketDeployment(
       this, 'Sync', {
-        destinationBucket: _static,
+        destinationBucket: staticBucket,
         memoryLimit: 1024,
         sources: [
           s3Deployment.Source.asset(
@@ -464,12 +398,33 @@ export class Nuxt extends cdk.Stack {
     )
 
     /**
+     * Imgix
+     */
+    const imgixOrigin = get('IMGIX_ORIGIN').required().asString();
+    if (!imgixOrigin) {
+      throw new Error(
+        'imgixOrigin is required'
+      );
+    }
+    
+    /**
+     * Prevents circular dependencies
+     * because we don't want to put this into
+     * the buckets, it just doesn't belong
+     * there, but we can't be circular
+     */
+    const nonCircularStaticBucket = s3.Bucket.fromBucketArn(
+      this, 'NonCircularStaticBucket',
+      staticBucket.bucketArn
+    );
+    
+    /**
      * Origins
      */
     const imgOrigin = new origins.HttpOrigin(imgixOrigin!);
     const gifOrigin = new origins.HttpOrigin(imgixOrigin!);
     const staticOrigin = origins.S3BucketOrigin.withOriginAccessControl(
-      _static, {
+      nonCircularStaticBucket, {
         originAccessLevels: [
           cf.AccessLevel.READ,
         ],
@@ -968,9 +923,9 @@ export class Nuxt extends cdk.Stack {
      */
     const cdn = new cf.Distribution(
       this, 'Cdn', {
-        logBucket: logs,
         enableLogging: true,
         logFilePrefix: 'cdn/',
+        logBucket: logsBucket,
         httpVersion: cf.HttpVersion.HTTP2_AND_3,
         defaultBehavior: ssrBehavior,
         certificate: certificate,
@@ -1053,99 +1008,6 @@ export class Nuxt extends cdk.Stack {
     // This sucks...
     invalidator.node.addDependency(
       cdn,
-    );
-    
-    /**
-     * Imgix
-     */
-    const imgixUser = new iam.User(
-      this, 'ImgixUser', {
-        userName: 'imgix'
-      }
-    );
-    
-    new cdk.CfnOutput(
-      this, 'ImgixUserName', {
-        value: imgixUser.userName,
-      }
-    )
-    
-    new cdk.CfnOutput(
-      this, 'ImgixUserArn', {
-        value: imgixUser.userArn,
-      }
-    )
-    
-    /**
-     * Scope out Imgix user permissions
-     *   even though we have little risk
-     *   for assets that are technically
-     *   public!
-     */
-    imgixUser.addToPolicy(
-      new iam.PolicyStatement({
-        resources: [_static.bucketArn],
-        actions: [
-          's3:ListBucket',
-          's3:GetBucketLocation',
-        ],
-      }),
-    );
-    
-    imgixUser.addToPolicy(
-      new iam.PolicyStatement({
-        actions: ['s3:GetObject'],
-        resources: [
-          `${_static.bucketArn}/assets/*`,
-        ],
-      }),
-    );
-    
-    /**
-     * SECURITY RISK: low
-     * It still uses regular
-     *   access keys, please note
-     *   that we scope it above!
-     */
-    const accessKey = new iam.CfnAccessKey(
-      this, 'ImgixAccessKey', {
-        userName: imgixUser.userName,
-      },
-    );
-    
-    new cdk.CfnOutput(
-      this, 'ImgixSecretAccessKey', {
-        value: accessKey.attrSecretAccessKey
-      }
-    );
-    
-    new cdk.CfnOutput(
-      this, 'ImgixAccessKeyId', {
-        value: accessKey.ref,
-      }
-    );
-  }
-  
-  /**
-   * Resolves and returns
-   * the root directory path for
-   * the CDK app
-   */
-  private get cdkRoot() {
-    return path.join(
-      __dirname, '..'
-    );
-  }
-  
-  /**
-   * Resolves and returns
-   * the absolute path to the root
-   * directory of the monorepo
-   * project.
-   */
-  private get root() {
-    return path.join(
-      __dirname, '..', '..'
     );
   }
   
