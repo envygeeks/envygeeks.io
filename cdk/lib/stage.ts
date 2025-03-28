@@ -30,6 +30,7 @@ export class Stage extends cdk.Stage {
     super(scope, id, props);
     this.env = props.envName;
     this.app = props.appName;
+    this.tagIt();
     
     /**
      * Stacks
