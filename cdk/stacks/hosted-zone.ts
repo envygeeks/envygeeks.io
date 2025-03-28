@@ -71,15 +71,6 @@ export class HostedZone extends stack.Stack {
   }
   
   /**
-   * Delegate -> hostedZone
-   *   The zone name in AWS aka
-   *   the domain name
-   */
-  get zoneName ():string {
-    return this.hostedZone.zoneName
-  }
-  
-  /**
    * IF YOUR DOMAIN STOPS WORKING:
    *   When it comes to DNS Sec, there is on that
    *   will need to go to your principal registrar
@@ -207,7 +198,7 @@ export class HostedZone extends stack.Stack {
       },
     );
     
-    const sec = new route53.CfnDNSSEC(
+    new route53.CfnDNSSEC(
       this, 'DNSSEC', {
         hostedZoneId: this.hostedZone.hostedZoneId,
       },

@@ -15,7 +15,6 @@ import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as cr from 'aws-cdk-lib/custom-resources';
 import * as lambda  from 'aws-cdk-lib/aws-lambda';
 import { LogGroup } from 'aws-cdk-lib/aws-logs';
-import * as s3 from 'aws-cdk-lib/aws-s3';
 import type { Stage } from '../../lib/stage';
 import * as stack from '../../lib/stack';
 import * as path from 'node:path';

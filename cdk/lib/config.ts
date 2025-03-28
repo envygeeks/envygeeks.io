@@ -1,12 +1,4 @@
 /**
- * Allowed Regions
- * For: AWS
- */
-export const Regions = [
-  "us-east-1"
-] as const;
-
-/**
  * Allowed Envs
  * For: Cdk
  */
@@ -18,10 +10,6 @@ export const Envs = [
 /**
  * Interfaces
  */
-export type App = string;
 export type GlobalEnv = "global";
-export const DefaultEnv = "dev"
 export type Env = typeof Envs[number];
-export type Region = typeof Regions[
-  number
-];
+export type App = string;

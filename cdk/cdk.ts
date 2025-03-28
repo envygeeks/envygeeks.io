@@ -11,7 +11,6 @@ import { Prod } from './stages/prod';
 const app = new cdk.App();
 const { CDK_DEFAULT_ACCOUNT: account, CDK_DEFAULT_REGION: region } = process.env
 const appName: config.App = get('APP_NAME').required().asString();
-const envName = 'global';
 cdk.Aspects.of(app).add(
   new nag.AwsSolutionsChecks(),
 );
@@ -34,7 +33,7 @@ new Github(
     }
   }
 );
-const hostedZone = new HostedZone(
+new HostedZone(
   app, 'HostedZone', {
     envName: 'global',
     appName,
@@ -43,7 +42,7 @@ const hostedZone = new HostedZone(
     }
   }
 );
-const dev = new Dev(
+new Dev(
   app, 'Dev', {
     envName: 'dev',
     appName,
@@ -52,7 +51,7 @@ const dev = new Dev(
     }
   },
 );
-const prod = new Prod(
+new Prod(
   app, 'Prod', {
     envName: 'prod',
     appName,
