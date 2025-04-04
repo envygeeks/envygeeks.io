@@ -3,6 +3,6 @@ import { App } from 'cdktf';
 
 const app = new App();
 new RepoStack(
-  app, "GithubRepo"
+  app, 'GithubRepo',
 );
 app.synth();

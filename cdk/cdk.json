@@ -1,5 +1,5 @@
 {
-  "app": "pnpm ts-node --prefer-ts-exts --project=tsconfig.json cdk.ts",
+  "app": "pnpm ts-node -r tsconfig-paths/register --prefer-ts-exts --project=./tsconfig.json cdk.ts",
   "outputsFile": "outputs.json",
   "requireApproval": "never",
   "watch": {
@@ -10,11 +10,11 @@
       "README.md",
       "cdk*.json",
       "**/*.d.ts",
-      "**/*.js",
       "tsconfig.json",
       "package*.json",
-      "yarn.lock",
       "node_modules",
+      "yarn.lock",
+      "**/*.js",
       "test"
     ]
   },

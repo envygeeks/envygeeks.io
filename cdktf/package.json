@@ -5,9 +5,12 @@
     "deploy:repo": "../script/with-env --dev cdktf deploy GithubRepo"
   },
   "devDependencies": {
-    "@cdktf/provider-github": "^14.6.0",
-    "cdktf": "^0.20.11",
-    "cdktf-cli": "^0.20.11",
-    "constructs": "^10.4.2"
+    "@cdktf/provider-github": "~14.6.0",
+    "cdktf": "~0.20.11",
+    "cdktf-cli": "~0.20.11",
+    "constructs": "~10.4.2"
+  },
+  "peerDependencies": {
+    "typescript": "workspace:*"
   }
 }

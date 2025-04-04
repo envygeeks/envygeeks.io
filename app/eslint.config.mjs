@@ -1,3 +1,4 @@
+import perfectionist from 'eslint-plugin-perfectionist'
 import withNuxt from "./.nuxt/eslint.config.mjs"
 
 export default withNuxt([
@@ -11,6 +12,9 @@ export default withNuxt([
   },
   {
     files: ["**/*.{js,ts,vue}"],
+    plugins: {
+      perfectionist
+    },
     languageOptions: {
       sourceType: "module",
       ecmaVersion: "latest",

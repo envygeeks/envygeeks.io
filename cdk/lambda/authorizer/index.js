@@ -23,9 +23,9 @@ exports.handler = async (event) => {
   try {
     const receivedToken = event.authorizationToken;
     const parsed = parseArn(event.methodArn);
-    const wildcardArn = 'arn:aws:execute-api:' +
-      `${parsed.region}:${parsed.account}:${parsed.resource[0]}/` +
-      `${parsed.resource[1]}/*/*`;
+    const wildcardArn = 'arn:aws:execute-api:'
+      + `${parsed.region}:${parsed.account}:${parsed.resource[0]}/`
+      + `${parsed.resource[1]}/*/*`;
 
     if (!receivedToken || receivedToken !== originToken) {
       console.log('token does not match');
@@ -57,7 +57,8 @@ exports.handler = async (event) => {
         ],
       },
     };
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error:', error);
     return {
       principalId: 'unauthorized',

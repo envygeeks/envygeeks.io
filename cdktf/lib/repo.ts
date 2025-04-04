@@ -1,41 +1,43 @@
 import { DataGithubUser } from '@cdktf/provider-github/lib/data-github-user';
-import { GithubProvider } from '@cdktf/provider-github/lib/provider';
 import { BranchProtection } from '@cdktf/provider-github/lib/branch-protection';
+import { GithubProvider } from '@cdktf/provider-github/lib/provider';
 import { Repository } from '@cdktf/provider-github/lib/repository';
 import { type App, TerraformStack } from 'cdktf';
 import { get } from 'env-var';
 
-const githubRepo = get('GITHUB_REPO').required(true).asString()
+const githubRepo = get('GITHUB_REPO').required(true).asString();
 const githubOwner = get('GITHUB_OWNER')
-  .required(true).asString()
+  .required(true).asString();
 
 export class RepoStack extends TerraformStack {
   constructor(scope: App, id: string) {
-    super(scope, id);
-    
+    super(
+      scope, id,
+    );
+
     /**
      * Init Github
      */
     new GithubProvider(
-      this, "Github", {
-        token: process.env.GITHUB_TOKEN!
-      }
+      this, 'Github', {
+        token: process.env.GITHUB_TOKEN!,
+      },
     );
-    
+
     /**
      * Owner
      */
     const owner = new DataGithubUser(
       this, 'RepoOwner', {
-        username: githubOwner
-      }
+        username: githubOwner,
+      },
     );
-    
+
     /**
      * Repo
      */
     const repo = new Repository(
-      this, "Repo", {
+      this, 'Repo', {
         name: githubRepo,
         hasProjects: true,
         hasDownloads: false,
@@ -49,14 +51,14 @@ export class RepoStack extends TerraformStack {
         visibility: 'public',
         hasIssues: true,
         hasWiki: false,
-      }
+      },
     );
-    
+
     /**
      * Branch Rule
      * Main
      */
-    new BranchProtection(this, "ProtectMain", {
+    new BranchProtection(this, 'ProtectMain', {
       repositoryId: repo.nodeId,
       pattern: 'main',
       allowsDeletions: false,
@@ -76,9 +78,9 @@ export class RepoStack extends TerraformStack {
           restrictDismissals: true,
           pullRequestBypassers: [
             owner.nodeId,
-          ]
+          ],
         },
-      ]
+      ],
     });
   }
 }

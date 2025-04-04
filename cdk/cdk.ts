@@ -1,62 +1,95 @@
+import type { App } from 'conf';
+import { Dns } from '@stacks/dns';
+import { Roles } from '@stacks/roles';
+import { AwsSolutionsChecks } from 'cdk-nag';
+import { Aspects, App as CdkApp } from 'aws-cdk-lib';
+import { Github } from '@stacks/github';
+import { Tls } from '@stacks/tls';
+import { Dev } from '@stages/dev';
+import { s3 } from '@stacks/s3';
 import { get } from 'env-var';
-import * as nag from 'cdk-nag';
-import * as cdk from 'aws-cdk-lib';
-import * as config from './lib/config';
-import { Github } from './stacks/github';
-import { HostedZone } from './stacks/hosted-zone';
-import { Roles } from './stacks/roles';
-import { Dev } from './stages/dev';
-import { Prod } from './stages/prod';
 
-const app = new cdk.App();
-const { CDK_DEFAULT_ACCOUNT: account, CDK_DEFAULT_REGION: region } = process.env
-const appName: config.App = get('APP_NAME').required().asString();
-cdk.Aspects.of(app).add(
-  new nag.AwsSolutionsChecks(),
+const app = new CdkApp();
+const { CDK_DEFAULT_ACCOUNT: account, CDK_DEFAULT_REGION: region } = process.env;
+const appName: App = get('APP_NAME').required().asString();
+const envName = 'global';
+Aspects.of(app).add(
+  new AwsSolutionsChecks(),
 );
 
-new Roles(
-  app, 'Roles', {
-    envName: 'global',
+/**
+ */
+const dns = new Dns(
+  app, 'Dns', {
+    envName,
     appName,
     env: {
-      account, region
-    }
+      account, region,
+    },
   },
 );
+
+/**
+ */
+new Roles(
+  app, 'Roles', {
+    envName,
+    appName,
+    env: {
+      account, region,
+    },
+  },
+);
+
+/**
+ */
+new s3(
+  app, 'S3', {
+    envName,
+    appName,
+    env: {
+      account, region,
+    },
+  },
+);
+
+/**
+ */
+const domain = get('DOMAIN').required().asString();
+const wildcard = true;
+new Tls(
+  app, 'Tls', {
+    envName,
+    wildcard,
+    appName,
+    domain,
+    dns,
+    env: {
+      account, region,
+    },
+  },
+);
+
+/**
+ */
 new Github(
   app, 'Github', {
-    envName: 'global',
+    envName,
     appName,
     env: {
-      account, region
-    }
-  }
+      account, region,
+    },
+  },
 );
-new HostedZone(
-  app, 'HostedZone', {
-    envName: 'global',
-    appName,
-    env: {
-      account, region
-    }
-  }
-);
+
+/**
+ */
 new Dev(
   app, 'Dev', {
     envName: 'dev',
     appName,
     env: {
-      account, region
-    }
-  },
-);
-new Prod(
-  app, 'Prod', {
-    envName: 'prod',
-    appName,
-    env: {
-      account, region
-    }
+      account, region,
+    },
   },
 );

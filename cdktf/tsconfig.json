@@ -26,7 +26,10 @@
     "skipLibCheck": true
   },
   "include": [
-    "**/*.ts"
+    "**/*.cjs",
+    "**/*.mjs",
+    "**/*.js",
+    "**/*.ts",
   ],
   "exclude": [
     "node_modules",

@@ -1,58 +1,60 @@
-import * as buckets from './buckets';
-import * as iam from "aws-cdk-lib/aws-iam";
-import type { Construct } from 'constructs';
-import * as helpers from "../../lib/helpers";
-import * as stack from "../../lib/stack"
-import * as cdk from "aws-cdk-lib";
+import { Construct, ConstructProps } from '@infra/construct';
+import type { s3 } from '@stacks/nuxt/s3';
+import { CfnOutput } from 'aws-cdk-lib';
+import { CfnAccessKey, PolicyStatement, User } from 'aws-cdk-lib/aws-iam';
+import { Construct as CdkConstruct } from 'constructs';
+import { capitalize } from 'helpers';
 
-export interface UsersProps
-extends stack.StackProps {
-  buckets: buckets.Buckets,
+export interface ImgixProps
+extends ConstructProps {
+  s3: s3
 }
 
-export class Users extends stack.Stack {
+export class Imgix extends Construct {
+  /**
+   */
   constructor(
-    scope: Construct,
-    id: string, props: UsersProps
+    scope: CdkConstruct,
+    id: string, props: ImgixProps,
   ) {
     super(
-      scope, id, props
+      scope, id, props,
     );
-    
+
     /**
      * Imgix
      */
-    const capitalizedEnv = helpers.Helpers.capitalize(this.env);
+    const capitalizedEnv = capitalize(this.env);
     const userName = `Imgix${capitalizedEnv}`;
-    const imgixUser = new iam.User(
+    const imgixUser = new User(
       this, 'ImgixUser', {
-        userName
-      }
+        userName,
+      },
     );
-    
-    new cdk.CfnOutput(
+
+    new CfnOutput(
       this, 'ImgixUserName', {
         value: imgixUser.userName,
-      }
+      },
     );
-    
-    new cdk.CfnOutput(
+
+    new CfnOutput(
       this, 'ImgixUserArn', {
         value: imgixUser.userArn,
-      }
+      },
     );
-    
+
     /**
      * Scope out Imgix user permissions
      *   even though we have little risk
      *   for assets that are technically
      *   public!
      */
-    const bucketArn = props.buckets.staticBucket.bucketArn;
+    const bucketArn = props.s3.bucket.bucketArn;
     imgixUser.addToPolicy(
-      new iam.PolicyStatement({
+      new PolicyStatement({
         resources: [
-          bucketArn
+          bucketArn,
         ],
         actions: [
           's3:ListBucket',
@@ -60,38 +62,38 @@ export class Users extends stack.Stack {
         ],
       }),
     );
-    
+
     imgixUser.addToPolicy(
-      new iam.PolicyStatement({
+      new PolicyStatement({
         actions: ['s3:GetObject'],
         resources: [
           `${bucketArn}/assets/*`,
-        ]
+        ],
       }),
     );
-    
+
     /**
      * SECURITY RISK: low
      * It still uses regular
      *   access keys, please note
      *   that we scope it above!
      */
-    const accessKey = new iam.CfnAccessKey(
+    const accessKey = new CfnAccessKey(
       this, 'ImgixAccessKey', {
         userName: imgixUser.userName,
       },
     );
-    
-    new cdk.CfnOutput(
+
+    new CfnOutput(
       this, 'ImgixSecretAccessKey', {
-        value: accessKey.attrSecretAccessKey
-      }
+        value: accessKey.attrSecretAccessKey,
+      },
     );
-    
-    new cdk.CfnOutput(
+
+    new CfnOutput(
       this, 'ImgixAccessKeyId', {
         value: accessKey.ref,
-      }
+      },
     );
   }
 }

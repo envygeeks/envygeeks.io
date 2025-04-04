@@ -1,11 +1,22 @@
 {
   "compilerOptions": {
+    "allowJs": true,
     "target": "ES2020",
     "module": "commonjs",
     "lib": [
       "es2020",
       "dom"
     ],
+    "paths": {
+      "conf": ["./lib/conf.ts"],
+      "@shared/*": ["./lib/shared/*"],
+      "@stacks/*": ["./lib/stacks/*"],
+      "@stages/*": ["./lib/stages/*"],
+      "helpers": ["./lib/helpers.ts"],
+      "@infra/*": [
+        "./lib/infra/*"
+      ]
+    },
     "declaration": true,
     "strict": true,
     "noImplicitAny": true,
@@ -27,9 +38,12 @@
   },
   "include": [
     "./dns.json",
+    "**/*.cjs", "**/*.mjs", "**/*.js",
     "**/*.ts"
   ],
   "exclude": [
+    "*.d.ts",
+    "node_modules/*",
     "node_modules",
     "cdk.out"
   ]
