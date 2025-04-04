@@ -20,6 +20,10 @@ def main():
     args, remaining_args = (
         parser.parse_known_args())
 
+    is_ci = os.environ.get("CI") in ["true", "1"]
+    if args.verbose:
+        print("is_ci: ", is_ci)
+
     # --
     # Load the Env File
     #   You don't really need one if
@@ -97,18 +101,32 @@ def main():
     if args.verbose:
         print("Pnpm Cmd: ", pnpm_cmd)
         print("Remaining Args: ", remaining_args)
-        print("Final Cmd: ", dotenvx_cmd[0], dotenvx_cmd + ["--"] + pnpm_cmd + remaining_args)
         print("Dotenvx Cmd: ", dotenvx_cmd)
         print("Args: ", args)
+
+        if is_ci is not True:
+            print("Final Cmd: ",
+                dotenvx_cmd[0], dotenvx_cmd + ["--"]
+                    + pnpm_cmd + remaining_args)
+        else:
+            print("Final Cmd: ",
+                pnpm_cmd + remaining_args)
 
     # --
     # Exec & Bail
     # --
-    os.execvp(
-        dotenvx_cmd[0],
-        dotenvx_cmd + ["--"] +
-            pnpm_cmd + remaining_args
-    )
+    if is_ci is not True:
+        os.execvp(
+            dotenvx_cmd[0],
+            dotenvx_cmd + ["--"] +
+                pnpm_cmd + remaining_args
+        )
+    else:
+        cmd = next((cmd for cmd in (pnpm_cmd, remaining_args) if cmd), None)
+        os.execvp(
+            cmd[0], pnpm_cmd
+                + remaining_args
+        )
 
 if __name__ == "__main__":
     main()
