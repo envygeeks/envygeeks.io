@@ -1,18 +1,26 @@
 version: 2
 updates:
   - package-ecosystem: npm
+    versioning-strategy: increase
+    update-types: minor
     directory: /
     schedule:
       interval: weekly
   - package-ecosystem: npm
+    versioning-strategy: increase
+    update-types: minor
     directory: /app
     schedule:
       interval: weekly
   - package-ecosystem: npm
+    versioning-strategy: increase
+    update-types: minor
     directory: /cdktf
     schedule:
       interval: weekly
   - package-ecosystem: npm
+    versioning-strategy: increase
+    update-types: minor
     directory: /cdk
     schedule:
       interval: weekly
