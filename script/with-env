@@ -76,11 +76,13 @@ def main():
         #   just makes life easier
         # --
         elif remaining_args[0] in ["nuxi", "eslint"]:
+            if args.verbose: print("Adding exec to nuxt/eslint")
             pnpm_cmd.append(
                 "exec"
             )
         else:
-            # There could be more later!
+            if args.verbose: print("remaining_args[0]: ", remaining_args[0])
+            if args.verbose: print("Adding run to command")
             if remaining_args[0] not in ["run", "exec"]:
                 pnpm_cmd.append(
                     "run"
@@ -95,6 +97,7 @@ def main():
     if args.verbose:
         print("Pnpm Cmd: ", pnpm_cmd)
         print("Remaining Args: ", remaining_args)
+        print("Final Cmd: ", dotenvx_cmd[0], dotenvx_cmd + ["--"] + pnpm_cmd + remaining_args)
         print("Dotenvx Cmd: ", dotenvx_cmd)
         print("Args: ", args)
 
