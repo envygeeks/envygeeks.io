@@ -14,7 +14,7 @@
     "@aws-sdk/client-iam": "~3.777.0",
     "aws-cdk": "~2.1005.0",
     "aws-cdk-lib": "~2.185.0",
-    "cdk-nag": "~2.35.53",
+    "cdk-nag": "~2.35.63",
     "constructs": "~10.4.2"
   },
   "peerDependencies": {
