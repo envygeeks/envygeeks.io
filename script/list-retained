@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+
+import sys
+import boto3
+import os
+
+def main():
+    profile = os.getenv("AWS_PROFILE")
+    account = os.getenv("AWS_ACCOUNT")
+    region = os.getenv(
+        "AWS_REGION", "us-east-1"
+    )
+
+    boto3.setup_default_session(profile_name=profile)
+    cloudformation = boto3.client("cloudformation", region_name=region)
+    sts = boto3.client("sts")
+
+    try:
+        current_account = sts.get_caller_identity()["Account"]
+        if account and current_account != account:
+            print(f"Error: Expected AWS account "
+                  f"{account}, but got {current_account}. "
+                  f"Check your credentials.")
+            sys.exit(1);
+
+        paginator = cloudformation.get_paginator("list_stacks")
+        page_iterator = paginator.paginate(StackStatusFilter=["DELETE_COMPLETE"])
+        deleted_stacks = [stack for page in page_iterator
+            for stack in page["StackSummaries"]]
+
+        if not deleted_stacks:
+            print("No deleted stacks found.")
+            sys.exit(0)
+
+        for stack in deleted_stacks:
+            stack_name = stack["StackName"]
+
+            try:
+                response = cloudformation.describe_stack_resources(StackName=stack_name)
+                retained = [
+                    res for res in response["StackResources"]
+                    if res["ResourceStatus"] ==
+                       "DELETE_SKIPPED"]
+
+                if retained:
+                    print(f"\nRetained resources in deleted stack {stack_name}:")
+                    for res in retained:
+                        print(f"- {res['LogicalResourceId']} "
+                              f"({res['ResourceType']})")
+
+            except cloudformation.exceptions.ClientError as e:
+                if "does not exist" in str(e): continue
+                print(
+                    f"Error checking stack {stack_name}: {e}")
+    except Exception as e:
+        print(f"Error: {e}")
+
+if __name__ == "__main__":
+    main()
