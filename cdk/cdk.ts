@@ -10,6 +10,7 @@ import { s3 } from '@stacks/s3';
 import { get } from 'env-var';
 
 const app = new CdkApp();
+const ci: boolean = get('CI').default('false').required().asBool();
 const { CDK_DEFAULT_ACCOUNT: account, CDK_DEFAULT_REGION: region } = process.env;
 const appName: App = get('APP_NAME').required().asString();
 const envName = 'global';
