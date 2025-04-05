@@ -5,8 +5,8 @@ import { Repository } from '@cdktf/provider-github/lib/repository';
 import { type App, TerraformStack } from 'cdktf';
 import { get } from 'env-var';
 
-const githubRepo = get('GITHUB_REPO').required(true).asString();
-const githubOwner = get('GITHUB_OWNER')
+const githubRepo = get('GH_REPO').required(true).asString();
+const githubRepoOwner = get('GH_REPO_OWNER')
   .required(true).asString();
 
 export class RepoStack extends TerraformStack {
@@ -29,7 +29,7 @@ export class RepoStack extends TerraformStack {
      */
     const owner = new DataGithubUser(
       this, 'RepoOwner', {
-        username: githubOwner,
+        username: githubRepoOwner,
       },
     );
 
