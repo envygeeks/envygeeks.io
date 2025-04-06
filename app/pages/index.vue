@@ -63,7 +63,6 @@
       })
       .find();
 
-    console.log(data);
     if (!data || data.length === 0) {
       loadedEverything.value = true;
     } else {
