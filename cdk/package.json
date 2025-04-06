@@ -11,10 +11,10 @@
     "synth": "../script/with-env --dev --pnpm=cdk synth *"
   },
   "devDependencies": {
-    "@aws-sdk/client-iam": "~3.777.0",
-    "aws-cdk": "~2.1005.0",
-    "aws-cdk-lib": "~2.185.0",
-    "cdk-nag": "~2.35.53",
+    "@aws-sdk/client-iam": "~3.782.0",
+    "aws-cdk": "~2.1007.0",
+    "aws-cdk-lib": "~2.188.0",
+    "cdk-nag": "~2.35.65",
     "constructs": "~10.4.2"
   },
   "peerDependencies": {
