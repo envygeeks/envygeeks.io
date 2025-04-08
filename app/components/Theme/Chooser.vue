@@ -1,8 +1,8 @@
 <template>
   <label class="swap swap-rotate">
     <input
-      v-model="isDark"
-      :value="DarkTheme"
+      v-model="isDefault"
+      :value="DEFAULT_THEME"
       class="theme-controller"
       type="checkbox"
     >
@@ -10,10 +10,9 @@
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
       :class="[
-        'swap-off',
         'fill-current',
-        `h-${size}`,
-        `w-${size}`,
+        `size-${size}`,
+        'swap-off',
       ]"
     >
       <path
@@ -36,10 +35,9 @@
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
       :class="[
+        'fill-current',
+        `size-${size}`,
         'swap-on',
-        'fill-white',
-        `h-${size}`,
-        `w-${size}`,
       ]"
     >
       <path
@@ -55,10 +53,12 @@
   </label>
 </template>
 <script setup lang="ts">
-  import { DarkTheme } from '~/composables/themeChooser';
-  import { toggleTheme } from '~/composables/themeChooser';
-  import { currentTheme } from '~/composables/themeChooser';
-  import { initTheme } from '~/composables/themeChooser';
+  import {
+    toggleTheme,
+    DEFAULT_THEME,
+    currentTheme,
+    initTheme,
+  } from '~/composables/themeChooser';
 
   const props = defineProps({
     size: {
@@ -68,15 +68,30 @@
   });
 
   // noinspection JSUnusedGlobalSymbols
-  const isDark = computed({
-    get: () => currentTheme.value === DarkTheme,
+  const isDefault = computed({
+    get: () => currentTheme.value === DEFAULT_THEME,
     set: (val) => {
-      if (isDark.value !== val) {
+      if (isDefault.value !== val) {
         toggleTheme();
       }
     },
   });
 
   const size = props.size;
-  onMounted(initTheme);
+  onMounted(
+    initTheme,
+  );
 </script>
+<style scoped>
+  @reference "~/assets/css/main.css";
+
+  @source inline("size-1");
+  @source inline("size-2");
+  @source inline("size-3");
+  @source inline("size-4");
+  @source inline("size-5");
+  @source inline("size-6");
+  @source inline("size-7");
+  @source inline("size-8");
+  @source inline("size-9");
+</style>

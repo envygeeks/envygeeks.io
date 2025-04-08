@@ -10,49 +10,60 @@
 
 <script setup lang=ts>
   import { addAuthor } from '~/helpers/posts/addAuthor';
+  type RouteParams = { tag: string, slug: string };
   const route = useRoute();
   definePageMeta({
     name: 'blog-post',
     nav: false,
   });
 
-  const { tag, slug } = route.params as { tag: string, slug: string };
+  const { tag, slug } = route.params as RouteParams;
   const { data: post } = await useAsyncData(
     'post', async () => {
-      const app = useNuxtApp();
-      const post = await queryContent()
-        .where({
-          _source: {
-            $eq: 'blog',
-          },
-          _dir: {
-            $eq: tag,
-          },
-          _path: {
-            $regex: slug,
-          },
-        })
-        .findOne();
+      try {
+        const app = useNuxtApp();
+        const post = await queryContent()
+          .where({
+            _source: {
+              $eq: 'blog',
+            },
+            _dir: {
+              $eq: tag,
+            },
+            _path: {
+              $regex: slug,
+            },
+          })
+          .findOne();
 
-      await app.runWithContext(async () => addAuthor(post));
-      return post;
+        await app.runWithContext(
+          async () => addAuthor(
+            post,
+          ),
+        );
+
+        return post;
+      }
+      catch(error) {
+        console.log('Content Query Error: ', error);
+        throw error;
+      }
     },
   );
+
+  const {
+    title: {
+      main,
+    },
+  } = useAppConfig();
+  useHead({
+    title: `${post.value?.title}: ${main}`,
+  });
 
   if (!post.value) {
     showError({
       statusCode: 404,
       statusMessage: 'Page not found',
-    });
-  }
-  else {
-    const {
-      title: {
-        main,
-      },
-    } = useAppConfig();
-    useHead({
-      title: `${post.title}: ${main}`,
     });
   }
 </script>

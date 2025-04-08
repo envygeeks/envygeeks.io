@@ -23,12 +23,15 @@
 </script>
 
 <style scoped>
+  @reference "~/assets/css/main.css";
+
   .nav {
     @media (max-width: theme('screens.md')) {
       display: none;
     }
 
     .list {
+      @apply flex-row;
       @apply space-x-4;
       @apply flex;
     }

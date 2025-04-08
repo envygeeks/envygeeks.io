@@ -1,7 +1,8 @@
 // noinspection JSUnusedGlobalSymbols
 
+import tailwindcss from '@tailwindcss/vite';
 import type { ConfigLayerMeta } from 'c12';
-import { DefaultTheme } from './composables/themeChooser';
+import { DEFAULT_THEME } from './composables/themeChooser';
 import { resolve } from 'path';
 
 /**
@@ -46,7 +47,7 @@ export default defineNuxtConfig({
         },
       ],
       htmlAttrs: {
-        'data-theme': DefaultTheme,
+        'data-theme': DEFAULT_THEME,
         lang: 'en',
       },
       script: [
@@ -54,7 +55,7 @@ export default defineNuxtConfig({
           type: 'text/javascript',
           innerHTML: `
             (() => {
-              const theme = localStorage.getItem('theme') || '${DefaultTheme}';
+              const theme = localStorage.getItem('theme') || '${DEFAULT_THEME}';
               document.documentElement.setAttribute('data-theme', theme);
             })();
           `,
@@ -63,15 +64,43 @@ export default defineNuxtConfig({
     },
   },
   vite: {
+    plugins: [
+      tailwindcss(),
+      // {
+      //   apply: 'build',
+      //   name: 'vite-plugin-ignore-sourcemap-warnings',
+      //   configResolved(config) {
+      //     const originalOnWarn = config.build.rollupOptions.onwarn;
+      //     config.build.rollupOptions.onwarn = (warning, warn) => {
+      //       if (
+      //         warning.code === 'SOURCEMAP_BROKEN' &&
+      //         warning.plugin === '@tailwindcss/vite:generate:build'
+      //       ) {
+      //         return;
+      //       }
+      //
+      //       if (originalOnWarn) {
+      //         originalOnWarn(
+      //           warning, warn,
+      //         );
+      //       } else {
+      //         warn(
+      //           warning,
+      //         );
+      //       }
+      //     };
+      //   },
+      // },
+    ],
     build: {
       cssCodeSplit: true,
     },
   },
+  css: ['~/assets/css/main.css'],
   modules: [
     '@nuxt/image',
-    '@nuxtjs/tailwindcss',
-    '@nuxtjs/google-fonts',
     '@nuxt/content',
+    '@nuxtjs/google-fonts',
     '@nuxt/eslint',
     '@nuxtjs/seo',
     'dayjs-nuxt',

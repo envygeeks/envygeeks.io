@@ -48,6 +48,8 @@
 </script>
 
 <style scoped>
+  @reference "~/assets/css/main.css";
+
   .drawer-inner {
     @apply flex;
     @apply bg-base-100;

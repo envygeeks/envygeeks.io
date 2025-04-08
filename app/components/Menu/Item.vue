@@ -52,6 +52,8 @@
 </script>
 
 <style scoped>
+  @reference "~/assets/css/main.css";
+
   summary {
     font-weight: 600;
   }

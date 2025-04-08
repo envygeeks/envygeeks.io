@@ -25,6 +25,8 @@
 </script>
 
 <style scoped>
+  @reference "~/assets/css/main.css";
+
   .menu {
     @apply w-full;
   }

@@ -77,3 +77,32 @@
   const computedStyle = useComputedStyle({ width, height });
   const shape = computed(() => `mask-${props.shape}`);
 </script>
+
+<style scoped>
+  @reference "~/assets/css/main.css";
+
+  @source inline("mask");
+  @source inline("mask-circle");
+  @source inline("mask-decagon");
+  @source inline("mask-diamond");
+  @source inline("mask-half-1");
+  @source inline("mask-half-2");
+  @source inline("mask-heart");
+  @source inline("mask-hexagon");
+  @source inline("mask-hexagon-2");
+  @source inline("mask-parallelogram");
+  @source inline("mask-parallelogram-2");
+  @source inline("mask-parallelogram-3");
+  @source inline("mask-parallelogram-4");
+  @source inline("mask-pentagon");
+  @source inline("mask-square");
+  @source inline("mask-squircle");
+  @source inline("mask-star");
+  @source inline("mask-star-2");
+  @source inline("mask-triangle");
+  @source inline("mask-triangle-2");
+  @source inline("mask-triangle-3");
+  @source inline("mask-triangle-4");
+  @source inline("float-right");
+  @source inline("float-left");
+</style>

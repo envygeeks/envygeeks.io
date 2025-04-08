@@ -1,25 +1,10 @@
-import { themes } from '../theme.config.mjs';
 import { ref } from 'vue';
 
-export const DarkTheme = 'dark'; // Dark Theme
-export const currentTheme = ref<string | null>(null); // Current Theme
-export const DefaultTheme = DarkTheme; // Default Theme
-export const LightTheme = 'light'; // Light Theme
+export const LIGHT_THEME = 'eg-light'; // Light Theme
+export const DEFAULT_THEME = LIGHT_THEME; // Default Theme
+export const DARK_THEME = 'eg-dark'; // Dark Theme
 
-export type theme = {
-  [key: string]: {
-    [key: string]: string
-  }
-}
-
-export function getTheme(themeName: string) {
-  return (themes as unknown as theme[]).find(
-    theme => Object.keys(theme).includes(
-      themeName,
-    ),
-  )?.[themeName];
-}
-
+export const currentTheme = ref<string | null>(null);
 export function initTheme() {
   currentTheme.value = localStorage.getItem('theme') ||
     document.documentElement.getAttribute(
@@ -38,7 +23,7 @@ export function initTheme() {
  * the selected theme to local storage.
  */
 export function toggleTheme() {
-  currentTheme.value = currentTheme.value === DarkTheme ? LightTheme : DarkTheme;
+  currentTheme.value = currentTheme.value === DARK_THEME ? LIGHT_THEME : DARK_THEME;
   document.documentElement.setAttribute('data-theme', currentTheme.value);
   localStorage.setItem(
     'theme', currentTheme.value,

@@ -14,9 +14,6 @@
 </template>
 
 <script setup lang="ts">
-  import { getTheme } from '~/composables/themeChooser';
-  import { currentTheme } from '~/composables/themeChooser';
-  import { DefaultTheme } from '~/composables/themeChooser';
   import { toRgb } from '#imports';
 
   const { width: _width, height: _height } = defineProps({
@@ -40,12 +37,12 @@
 
   const width = _width as string|number;
   const height = _height as string|number;
-  const computedColor = computed(() => {
-    const theme = currentTheme.value || DefaultTheme;
-    const themeConfig = getTheme(theme);
-    return toRgb(
-      themeConfig!['base-content'],
-    );
+  const computedColor = ref('rgb(0,0,0)');
+  onMounted(() => {
+    const styles = getComputedStyle(document.documentElement);
+    computedColor.value = toRgb(styles.getPropertyValue(
+      '--color-base-content',
+    ));
   });
 
   /**
@@ -72,6 +69,8 @@
 </script>
 
 <style scoped>
+  @reference "~/assets/css/main.css";
+
   svg {
     @apply inline;
     @apply mr-3;
