@@ -30,6 +30,8 @@ extends ConstructProps {
 }
 
 export class Cdn extends Construct {
+  public readonly distro: Distribution;
+
   constructor(
     scope: CdkConstruct,
     id: string, props: CdnProps,
@@ -61,7 +63,7 @@ export class Cdn extends Construct {
       this, 'LogsBucket', logsBucketArn,
     );
 
-    const cdn = new Distribution(
+    this.distro = new Distribution(
       this, 'Cdn', {
         enableLogging: true,
         logFilePrefix: 'cdn/',
@@ -86,19 +88,19 @@ export class Cdn extends Construct {
 
     new CfnOutput(
       this, 'CdnDomainName', {
-        value: cdn.domainName,
+        value: this.distro.domainName,
       },
     );
 
     new CfnOutput(
       this, 'CdnDistributionId', {
-        value: cdn.distributionId,
+        value: this.distro.distributionId,
       },
     );
 
     new CfnOutput(
       this, 'CdnDistributionArn', {
-        value: cdn.distributionArn,
+        value: this.distro.distributionArn,
       },
     );
 
@@ -113,7 +115,9 @@ export class Cdn extends Construct {
         zone: hostedZone,
         recordName: 'dev',
         target: RecordTarget.fromAlias(
-          new CloudFrontTarget(cdn),
+          new CloudFrontTarget(
+            this.distro,
+          ),
         ),
       },
     );

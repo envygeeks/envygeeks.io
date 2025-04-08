@@ -1,3 +1,4 @@
+import type { Cdn } from '@stacks/nuxt/cdn';
 import type { Ssr } from '@stacks/nuxt/ssr';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { execSync } from 'node:child_process';
@@ -13,6 +14,7 @@ import { cpSync } from 'node:fs';
 export interface SyncProps
 extends ConstructProps {
   ssr: Ssr
+  cdn: Cdn
   s3: s3
 }
 
@@ -86,6 +88,11 @@ export class Sync extends Construct {
       this, 'Sync', {
         memoryLimit: 1024,
         destinationBucket: props.s3.bucket,
+        distribution: props.cdn.distro,
+        distributionPaths: [
+          '/**/*',
+          '/*',
+        ],
         sources: [
           Source.asset(
             pubStaging.absoluteStagedPath,

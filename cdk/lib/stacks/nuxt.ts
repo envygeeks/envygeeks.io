@@ -56,7 +56,7 @@ export class Nuxt extends Stack {
 
     /**
      */
-    new Cdn(
+    const cdn = new Cdn(
       this, 'Cdn', {
         ...props,
         api, s3,
@@ -69,6 +69,7 @@ export class Nuxt extends Stack {
       this, 'Sync', {
         ...props,
         ssr,
+        cdn,
         s3,
       },
     );
