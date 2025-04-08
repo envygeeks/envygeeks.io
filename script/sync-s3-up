@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -eo pipefail
 
-base="$(cd "$(dirname "$0")" && pwd)"
-s3_base="s3://${S3_CONTENT_BUCKET}"
-
+base=$(cd "$(dirname "$0")" && pwd)
+outputs_path="${base}/../cdk/outputs.json"
+s3_base="s3://$(jq -r '.S3.ContentName' "${outputs_path}")"
 for dir in content public; do
   aws s3 sync "${base}/../app/${dir}" \
     "${s3_base}/${dir}" \
