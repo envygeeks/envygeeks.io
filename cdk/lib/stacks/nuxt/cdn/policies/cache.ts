@@ -62,12 +62,12 @@ export class Cache extends Construct {
     this.ssr = new CachePolicy(
       scope, 'SsrCache', {
         enableAcceptEncodingBrotli: true,
-        cookieBehavior: OriginRequestCookieBehavior.none(),
+        cookieBehavior: OriginRequestCookieBehavior.all(),
         defaultTtl: Duration.days(1), minTtl: Duration.seconds(0),
-        queryStringBehavior: OriginRequestQueryStringBehavior.none(),
+        queryStringBehavior: OriginRequestQueryStringBehavior.all(),
         headerBehavior: OriginRequestHeaderBehavior.none(),
         enableAcceptEncodingGzip: true,
-        maxTtl: Duration.days(365),
+        maxTtl: Duration.days(7),
       },
     );
   }

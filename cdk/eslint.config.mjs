@@ -1,6 +1,5 @@
 import parser from '@typescript-eslint/parser';
 import tslint from '@typescript-eslint/eslint-plugin';
-import perfectionist from 'eslint-plugin-perfectionist';
 import stylistic from '@stylistic/eslint-plugin';
 import t_eslint from 'typescript-eslint';
 
@@ -8,7 +7,7 @@ import t_eslint from 'typescript-eslint';
  * There is a bug with
  * `@stylistic/indent` where it
  * doesn't seem to properly detect the
- * node and allow it's exclusion
+ * node and allow its exclusion
  */
 const originalRules = stylistic.configs.recommended;
 const { '@stylistic/indent': _, ...newRules } = originalRules.rules;

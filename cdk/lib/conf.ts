@@ -12,7 +12,7 @@ export const Envs = [
 export const TARGET_NODE_VERSION = Runtime.NODEJS_18_X;
 export const DOCKER_IMAGE = 'public.ecr.aws/sam/asset-nodejs18.x:latest-arm64';
 export const DOCKER_ASSET = DockerImage.fromRegistry(
-  DOCKER_IMAGE
+  DOCKER_IMAGE,
 );
 
 /**
