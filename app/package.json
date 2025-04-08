@@ -32,7 +32,7 @@
     "@types/culori": "~2.1.1",
     "@vue/test-utils": "~2.4.6",
     "culori": "~4.0.1",
-    "daisyui": "~5.0.12",
+    "daisyui": "~5.0.16",
     "dayjs-nuxt": "~2.1.11",
     "happy-dom": "~17.4.4",
     "nuxt": "npm:nuxt-nightly@3.17.0-29067302.1ff9d728",
