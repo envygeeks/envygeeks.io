@@ -4,7 +4,7 @@
   "devDependencies": {
     "@dotenvx/dotenvx": "~1.39.1",
     "@stylistic/eslint-plugin": "~4.2.0",
-    "@typescript-eslint/eslint-plugin": "~8.29.0",
+    "@typescript-eslint/eslint-plugin": "~8.29.1",
     "@typescript-eslint/parser": "~8.29.0",
     "env-var": "~7.5.0",
     "eslint": "~9.24.0",
