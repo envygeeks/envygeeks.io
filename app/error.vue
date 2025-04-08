@@ -26,9 +26,7 @@
 </script>
 
 <style scoped>
-  @tailwind utilities;
-  @tailwind components;
-  @tailwind base;
+  @reference "~/assets/css/main.css";
 
   .error-container {
     padding: 50px;

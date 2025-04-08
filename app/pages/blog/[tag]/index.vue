@@ -21,6 +21,8 @@
 </script>
 
 <style scoped>
+  @reference "~/assets/css/main.css";
+
   div {
     @apply w-full;
     @apply relative;

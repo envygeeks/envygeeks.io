@@ -12,6 +12,8 @@
 </template>
 
 <style scoped>
+  @reference "~/assets/css/main.css";
+
   .hamburger {
     @apply btn;
     @apply btn-ghost;

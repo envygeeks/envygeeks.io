@@ -1,0 +1,18 @@
+@font-face {
+  font-family: 'Fast Sans';
+  /*noinspection CssUnknownTarget*/
+  src: url('~/public/assets/fonts/Fast_Sans.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+html[data-bionic] {
+  body {
+    font-family: 'Fast Sans', sans-serif;
+  }
+}
+
+@theme {
+  --font-sans: 'Poppins', sans-serif;
+  --font-display: 'Popppins', sans-serif;
+}

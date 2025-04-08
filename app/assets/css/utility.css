@@ -1,0 +1,10 @@
+@utility min-w-screen-md { min-width: theme('screens.md'); }
+@utility min-w-screen-lg { min-width: theme('screens.lg'); }
+@utility min-w-screen-sm {
+  min-width: theme('screens.sm');
+}
+
+@utility phone-hidden {
+  @apply hidden;
+  @apply lg:flex;
+}

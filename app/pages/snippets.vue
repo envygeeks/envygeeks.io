@@ -62,7 +62,7 @@
 </script>
 
 <style scoped>
-  @tailwind base;
+  @reference "~/assets/css/main.css";
 
   .snippets {
     @apply grid;

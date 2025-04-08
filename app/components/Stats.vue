@@ -60,6 +60,8 @@
 </script>
 
 <style scoped>
+  @reference "~/assets/css/main.css";
+
   .skill-stats {
     @apply mb-12;
     @apply mx-auto;
@@ -110,7 +112,7 @@
         @apply h-[54px];
         @apply relative;
         background-color: color-mix(
-          in oklch, oklch(var(--in)), oklch(var(--inc)) 12%
+          in oklch, var(--color-info), var(--color-info-content) 12%
         );
 
         div {

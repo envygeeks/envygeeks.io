@@ -56,6 +56,8 @@
 </script>
 
 <style scoped>
+  @reference "~/assets/css/main.css";
+
   table {
     @apply font-sans;
     @apply mb-8;
@@ -69,20 +71,20 @@
   td {
     @apply border-b-2;
     border-color: color-mix(
-      in oklch, oklch(var(--n)), black 12%
+      in oklch, oklch(var(--color-neutral)), black 12%
     );
   }
 
   tr:nth-child(even) td {
     background-color: color-mix(
-      in oklch, oklch(var(--n)), black 6%
+      in oklch, oklch(var(--color-neutral)), black 6%
     );
   }
 
   th {
     @apply text-primary;
     background-color: color-mix(
-      in oklch, oklch(var(--n)), black 12%
+      in oklch, oklch(var(--color-neutral)), black 12%
     );
   }
 </style>

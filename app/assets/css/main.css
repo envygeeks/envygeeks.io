@@ -1,0 +1,116 @@
+@import 'tailwindcss';
+@import './fonts.css';
+@import './utility.css';
+@import './themes.css';
+@source "../../content";
+@plugin 'daisyui' {
+  themes: eg-light --default, eg-dark --prefersdark
+}
+
+html, body {
+  @apply min-h-screen;
+}
+
+body {
+  @apply font-normal;
+  @apply font-sans;
+}
+
+.content {
+  @apply min-w-[0px];
+  @apply min-w-[120px];
+  @apply leading-[32px];
+  @apply max-w-[660px];
+  @apply text-[18px];
+  @apply w-full;
+
+  /**
+    * All pages should be
+    *   .content > article.{class}
+   */
+  > article {
+    @apply mt-24;
+    @apply w-full;
+    @apply block;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-sans;
+    @apply font-extrabold;
+    @apply tracking-tighter;
+    @apply pb-8;
+  }
+
+  h1 { @apply text-5xl; }
+  h2 { @apply text-4xl; }
+  h3 { @apply text-3xl; }
+  h4 { @apply text-2xl; }
+
+  p, img:not([class*="mb-"]) {
+    @apply mb-8;
+  }
+
+  /**
+   * Shiki Highlighter
+   * AKA Code
+   */
+  pre[class*="language-"] {
+    @apply border;
+    @apply rounded-md;
+    @apply border-base-300;
+    @apply overflow-x-auto;
+    @apply bg-base-200;
+    @apply text-sm;
+    @apply mb-8;
+    @apply p-4;
+
+    span {
+      /*
+        noinspection
+          CssUnresolvedCustomProperty
+      */
+
+      color: var(
+        --shiki-default
+      );
+    }
+  }
+}
+
+html[data-theme="eg-dark"] {
+  color-scheme: dark;
+
+  .content {
+    pre[class*="language-"] {
+
+      /*
+        noinspection
+          CssUnresolvedCustomProperty
+      */
+      span {
+        font-weight: var(--shiki-dark-font-weight);
+        text-decoration: var(--shiki-dark-text-decoration);
+        color: var(--shiki-dark);
+      }
+    }
+  }
+}
+
+html[data-theme="eg-light"] {
+  color-scheme: github;
+
+  .content {
+    pre[class*="language-"] {
+
+      /*
+        noinspection
+          CssUnresolvedCustomProperty
+      */
+      span {
+        font-weight: var(--shiki-light-font-weight);
+        text-decoration: var(--shiki-light-text-decoration);
+        color: var(--shiki-light);
+      }
+    }
+  }
+}
