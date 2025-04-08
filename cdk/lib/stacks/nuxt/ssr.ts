@@ -255,13 +255,13 @@ export class Ssr extends Construct {
     );
 
     new CfnOutput(
-      this, 'SsrFunctionName', {
+      this, 'LambdaName', {
         value: this.lambda.functionName,
       },
     );
 
     new CfnOutput(
-      this, 'SsrFunctionArn', {
+      this, 'LambdaArn', {
         value: this.lambda.functionArn,
       },
     );

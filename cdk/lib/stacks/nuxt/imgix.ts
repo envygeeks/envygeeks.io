@@ -27,19 +27,19 @@ export class Imgix extends Construct {
     const capitalizedEnv = capitalize(this.env);
     const userName = `Imgix${capitalizedEnv}`;
     const imgixUser = new User(
-      this, 'ImgixUser', {
+      this, 'User', {
         userName,
       },
     );
 
     new CfnOutput(
-      this, 'ImgixUserName', {
+      this, 'UserName', {
         value: imgixUser.userName,
       },
     );
 
     new CfnOutput(
-      this, 'ImgixUserArn', {
+      this, 'UserArn', {
         value: imgixUser.userArn,
       },
     );
@@ -79,19 +79,19 @@ export class Imgix extends Construct {
      *   that we scope it above!
      */
     const accessKey = new CfnAccessKey(
-      this, 'ImgixAccessKey', {
+      this, 'AccessKey', {
         userName: imgixUser.userName,
       },
     );
 
     new CfnOutput(
-      this, 'ImgixSecretAccessKey', {
+      this, 'SecretAccessKey', {
         value: accessKey.attrSecretAccessKey,
       },
     );
 
     new CfnOutput(
-      this, 'ImgixAccessKeyId', {
+      this, 'AccessKeyId', {
         value: accessKey.ref,
       },
     );

@@ -87,19 +87,19 @@ export class Cdn extends Construct {
     );
 
     new CfnOutput(
-      this, 'CdnDomainName', {
+      this, 'DomainName', {
         value: this.distro.domainName,
       },
     );
 
     new CfnOutput(
-      this, 'CdnDistributionId', {
+      this, 'DistributionId', {
         value: this.distro.distributionId,
       },
     );
 
     new CfnOutput(
-      this, 'CdnDistributionArn', {
+      this, 'DistributionArn', {
         value: this.distro.distributionArn,
       },
     );
